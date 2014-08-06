@@ -4,7 +4,7 @@
 
 放在这里的是由我（PN：喵呜喵5）自己写的RGSS3脚本。<br>
 
-Github并不是更新的主力，目前的重心还是放在我在6R的<a href="http://rm.66rpg.com/?291206" target="_blank" style="text-decoration:none">博客</a>。<br>
+Github并不是更新的主力，目前的重心还是放在我在6R的 <a href="http://rm.66rpg.com/?291206" target="_blank" style="text-decoration:none">博客</a> 。<br>
 
 这些脚本全部免费使用，但是使用脚本前请先阅读 <a href="https://github.com/miaowm5/rgss3/blob/master/Licence.md" target="_blank" style="text-decoration:none">使用规约</a> 。<br>
 
