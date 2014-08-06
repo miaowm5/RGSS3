@@ -21,8 +21,7 @@
 		<a href="http://rmtemp.lofter.com/post/3e26fe_156f1c7">可以自由的二次配布</a> 
 	</li>
 </ul>
-<h2>
-</h2>
+<hr>
 <p>
 	<strong>【其他规约】</strong>
 </p>
