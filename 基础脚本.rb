@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = 20140807
+$m5script["M5Base"] = 20140808
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -129,7 +129,7 @@ class Window_M5CalText < Window_Base
   attr_writer :font_width
   attr_writer :font_height
   def initialize
-    super(0, 0, Graphics.width, Graphics.height)    
+    super(0, 0, Graphics.width, Graphics.height)
     self.visible = false
     @text = ""
     @font_width = nil
@@ -155,7 +155,7 @@ class Window_M5CalText < Window_Base
     @text = text
     all_text_width = 1
     convert_escape_characters(@text).each_line do |line|
-      all_text_width = [all_text_width,calc_line_width(line)].max      
+      all_text_width = [all_text_width,calc_line_width(line)].max
     end
     return all_text_width
   end
@@ -190,5 +190,18 @@ class Window_M5Help < Window_Base
   def refresh
     contents.clear
     draw_text_ex(4, 0, @text)
+  end
+end
+#--------------------------------------------------------------------------
+# ● 获取指定地图特定事件名的事件ID数组
+#
+#     M5script.match_ev_name(name,id)
+#--------------------------------------------------------------------------
+module M5script
+  def self.match_ev_name(match = "m5",map_id = $game_map.map_id)
+    array = []
+    map = load_data(sprintf("Data/Map%03d.rvdata2", map_id))
+    map.events.each_pair {|id,ev| array.push(id) if ev.name == match}
+    array
   end
 end
