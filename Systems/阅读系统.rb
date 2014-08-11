@@ -5,13 +5,12 @@
 
 【说明】
 
-  将事件页中的滚动文字指令整个替换掉变成这个阅读系统……
-  使用方法很简单，选择事件指令中的滚动文字，
-  之后在游戏中这个滚动文字就会以可以上下移动的对话框窗口显示出来
+  将游戏中滚动文字的显示方式换成了可以上下移动的对话框窗口
   
-  上下键用于翻页，左右键用于快速翻页
-  取消键可以回到开头部分，
+  上下键用于翻页，左右键用于快速翻页，取消键可以回到开头部分，
   确定键可以用来快速翻页，当翻到页底时关闭窗口
+  
+  描绘文字需要耗费一定的时间，请尽量避免显示太多的文字
   
 =end
 $m5script ||= {};$m5script["M5Read20140811"] = 20140811
@@ -63,12 +62,14 @@ class Window_M5Read20140811 < Window_Base
   include M5Read20140811
   def initialize
     super(WIDTH/2, HEIGHT/3, Graphics.width - WIDTH, Graphics.height - HEIGHT)
-    self.opacity = 0 if !BACK || EFFECT == 1    
+    self.opacity = 0 unless BACK
     case EFFECT
-      when 0 then self.openness = 0
-      else        self.contents_opacity = 0
+    when 0 then self.openness = 0
+    else
+      self.opacity = 0
+      self.contents_opacity = 0
     end
-    @mouse = nil
+    set_mouse
   end
   def update
     super
@@ -88,32 +89,42 @@ class Window_M5Read20140811 < Window_Base
     update_message_down if Input.press?(:DOWN)
     15.times {update_message_up} if Input.press?(:LEFT) || mouse_up
     15.times {update_message_down} if Input.press?(:RIGHT) || mouse_down
-  end  
+  end
   def update_ok
     if Input.trigger?(:C)
-      if self.oy < contents.height - self.height + \
-        standard_padding * 2 + SPACE
+      if self.oy < contents.height - self.height + standard_padding * 2 + SPACE
         30.times {update_message_down}
       else
         terminate_message
       end
     end
   end
+  #--------------------------------------------------------------------------
+  # ● Sion 鼠标脚本的相关处理
+  #--------------------------------------------------------------------------
   def mouse_up
-    return false if !@mouse
+    return false unless @mouse
     if @mouse < Mouse.z
       @mouse = Mouse.z
-      return true 
+      return true
     end
     false
   end
   def mouse_down
-    return false if !@mouse
+    return false unless @mouse
     if @mouse > Mouse.z
       @mouse = Mouse.z
-      return true 
+      return true
     end
     false
+  end
+  def set_mouse
+    if $SINOVA and $SINOVA[:mouseBase] and ($SINOVA[:mouseBase] >= 3.00)
+      Mouse.reset_z
+      @mouse = Mouse.z
+    else
+      @mouse = nil
+    end
   end
   #--------------------------------------------------------------------------
   # ● 文字开始/结束显示
@@ -122,13 +133,8 @@ class Window_M5Read20140811 < Window_Base
     @text = $game_message.all_text
     self.oy = -SPACE
     refresh
+    set_mouse
     open
-    if $SINOVA and $SINOVA[:mouseBase] and ($SINOVA[:mouseBase] >= 3.00)
-      Mouse.reset_z
-      @mouse = Mouse.z
-    else
-      @mouse = nil
-    end
   end
   def terminate_message
     @text = nil
@@ -154,27 +160,23 @@ class Window_M5Read20140811 < Window_Base
   #--------------------------------------------------------------------------
   # ● 文字滚动效果的处理
   #--------------------------------------------------------------------------  
-  def update_message_down
-    return if contents.height < self.height - standard_padding * 2 - SPACE
+  def update_message_down    
     self.oy = [self.oy + SPEED,
     contents.height - self.height + standard_padding * 2 + SPACE ].min
   end
-  def update_message_up
-    return if contents.height < self.height - standard_padding * 2 - SPACE
+  def update_message_up    
     self.oy = [self.oy - SPEED,- SPACE ].max
   end
   #--------------------------------------------------------------------------
   # ● 打开/关闭特效的处理
-  #--------------------------------------------------------------------------
-  attr_reader :opening
-  attr_reader :closing
+  #--------------------------------------------------------------------------  
   def open    
     @opening = true if self.contents_opacity != 255
     super
   end
   def close
     @closing = true if self.contents_opacity != 0
-    super    
+    super
   end
   def update_open    
     case EFFECT
@@ -183,6 +185,7 @@ class Window_M5Read20140811 < Window_Base
       @opening = false if open?
     when 1
       self.contents_opacity += COME
+      self.opacity = self.contents_opacity if BACK
       if self.contents_opacity >= 255
         @opening = false
         self.arrows_visible = true
@@ -196,15 +199,14 @@ class Window_M5Read20140811 < Window_Base
       @closing = false if close?
     when 1
       self.contents_opacity -= COME
+      self.opacity = self.contents_opacity if BACK
       if self.contents_opacity <= 0
         @closing = false
         self.arrows_visible = false
       end      
     end
   end
-  def effecting
-    return @opening || @closing
-  end
+  def effecting;return @opening || @closing;end
 end
 
 class Window_ScrollText
@@ -222,8 +224,9 @@ class Window_ScrollText
   def update
     if $game_switches[M5Read20140811::SWI]
       m5_20140811_update
-      @m5_20140811_read.update if @m5_20140811_read.effecting      
+      @m5_20140811_read.update if @m5_20140811_read.effecting
     else
+      super
       @m5_20140811_read.update
     end    
   end
