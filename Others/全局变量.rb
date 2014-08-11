@@ -19,13 +19,17 @@ module M5GV20140811
 #  设定部分
 #==============================================================================
   
-  VAR = [1,2,4] 
+  VAR = [1,3]
   
   # 在这里设置需要储存的全局变量ID
   
   FILENAME = "Public"
   
   # 在这里设置储存全局变量的文件名
+  
+  AUTO = false
+  
+  # 设置为 true 的话，变量的值发生改变时自动保存全局变量
   
 #==============================================================================
 #  设定结束
@@ -43,11 +47,19 @@ module M5GV20140811
   def self.load_var
     return unless File.exist?(FILENAME)
     var = load_data(FILENAME)[0]
-    var.each_with_index{|v,i| $game_variables[VAR[i]] = v }
+    var.each_with_index{|v,i| $game_variables.m5_20140811_set(VAR[i], v)}
   end
   def self.load_ext    
     return {} unless File.exist?(FILENAME)
     return load_data(FILENAME)[1]
+  end
+end
+class Game_Variables
+  alias m5_20140811_set []=
+  def []=(variable_id, value)
+    m5_20140811_set(variable_id, value)
+    return unless M5GV20140811::AUTO
+    M5GV20140811.save_var if M5GV20140811::VAR.include?(variable_id)
   end
 end
 class Game_Interpreter
