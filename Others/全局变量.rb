@@ -51,10 +51,6 @@ module M5GV20140811
   end
 end
 class Game_Interpreter
-  def save_var
-    M5GV20140811.save_var
-  end
-  def load_var
-    M5GV20140811.load_var
-  end
+  def save_var;M5GV20140811.save_var;end
+  def load_var;M5GV20140811.load_var;end
 end
