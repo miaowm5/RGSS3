@@ -215,3 +215,29 @@ module M5script
     array
   end
 end
+#--------------------------------------------------------------------------
+# ● 字体的设置
+#
+#     m5_return_all_setting   返回字体设置数组
+#     m5_set_all_setting(set) 一次性设置字体的全部属性
+#--------------------------------------------------------------------------
+class Font
+  def m5_return_all_setting
+    set = [self.name,self.size,self.bold,self.italic,self.outline,self.shadow,
+      "Color.new#{self.color}","Color.new#{self.out_color}"]
+    instance_variables.each do |var|
+      set.push instance_variable_get(var)
+    end
+    set
+  end
+  def m5_set_all_setting(set)
+    instance_variables.reverse!.each do |var|
+      instance_variable_set(var, set.pop)
+    end
+    list = ["self.name","self.size","self.bold","self.italic","self.outline",
+      "self.shadow","self.color","self.out_color"]
+    list.reverse!.each do |var|
+      eval("#{var}=#{set.pop}")
+    end
+  end
+end
