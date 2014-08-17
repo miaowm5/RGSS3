@@ -1,31 +1,15 @@
-<p>
-	<strong>【简化规约】</strong>
+<strong>【使用规约】</strong></p>
+<a href="http://rmtemp.lofter.com/post/3e26fe_156e50a" target="_blank"><img src="http://ww2.sinaimg.cn/large/685fd051gw1ejfhhdnep4j20b402sglw.jpg" /></a>
+<a href="http://rmtemp.lofter.com/post/3e26fe_156f11b" target="_blank"><img src="http://ww3.sinaimg.cn/large/685fd051gw1ejfkkg8cphj20b402s3yv.jpg" /></a>
+<a href="http://rmtemp.lofter.com/post/3e26fe_156f16f" target="_blank"><img src="http://ww2.sinaimg.cn/large/685fd051gw1ejfitp00tfj20b402sq39.jpg" /></a>
+<a href="http://rmtemp.lofter.com/post/3e26fe_156e513" target="_blank"><img src="http://ww4.sinaimg.cn/large/685fd051gw1ejfiya6x8bj20b402st8y.jpg" /></a>
+<a href="http://rmtemp.lofter.com/post/3e26fe_156f131" target="_blank"><img src="http://ww3.sinaimg.cn/large/685fd051gw1ejfkbh5oi0j20b402sjrp.jpg" /></a>
+<a href="http://rmtemp.lofter.com/post/3e26fe_156f1c7" target="_blank"><img src="http://ww4.sinaimg.cn/large/685fd051gw1ejfjkpovy5j20b402sdg4.jpg" /></a>
 </p>
 <ul>
 	<li>
-		<a href="http://rmtemp.lofter.com/post/3e26fe_156e50a">基本规则</a> 
+		用于收费游戏或者参加比赛的游戏中时要求署名。
 	</li>
-	<li>
-		<a href="http://rmtemp.lofter.com/post/3e26fe_156f16f">不需要报告</a> 
-	</li>
-	<li>
-		<a href="http://rmtemp.lofter.com/post/3e26fe_156e513">不需要署名（仅针对免费游戏）</a> 
-	</li>
-	<li>
-		<a href="http://rmtemp.lofter.com/post/3e26fe_156f11b">自由的用于任何游戏中（用于收费游戏或用于参加比赛的游戏中时要求署名）</a> 
-	</li>
-	<li>
-		<a href="http://rmtemp.lofter.com/post/3e26fe_156f131">允许加工</a> 
-	</li>
-	<li>
-		<a href="http://rmtemp.lofter.com/post/3e26fe_156f1c7">可以自由的二次配布</a> 
-	</li>
-</ul>
-<hr>
-<p>
-	<strong>【其他规约】</strong>
-</p>
-<ul>
 	<li>
 		如果免费游戏附带有使用的素材列表的话（例如在游戏ED、游戏介绍文档、游戏发布帖中）则要求署名。（因为这种情况下不署名可能会造成“这个脚本是游戏作者自己原创的”的误解。）
 	</li>
