@@ -45,7 +45,7 @@
 #==============================================================================
 #  脚本部分
 #==============================================================================
-$m5script ||= {};$m5script["M5CommandSS20140821"] = 20140821
+$m5script ||= {};$m5script["M5Command20140821"] = 20140821
 class Game_SelfSwitches;attr_reader :data;end
 class Game_Interpreter
   def m5_fi(time = 250)
