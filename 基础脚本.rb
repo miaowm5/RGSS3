@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = 20140821
+$m5script["M5Base"] = 20140822
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -89,29 +89,50 @@ class Window_Base
   def m5_exp_color(actor);tp_color(actor);end
 end
 #--------------------------------------------------------------------------
+# ● 绘制多排图标
+#
+#     m5_draw_icons(icons, x, y, width, col, enabled) 描绘图标
+#     m5_draw_actor_icons(actor, x, y, width, col)    描绘角色状态图标
+#--------------------------------------------------------------------------
+class Window_Base  
+  def m5_draw_icons(icons, x, y, width = 96, col = 1, enabled = [])    
+    col.times do |line|
+      temp_icons = icons[width * line / 24, width / 24]
+      temp_icons.each_with_index do |icon_index, pos|
+        alpha = enabled[pos + width * line / 24]
+        draw_icon(icon_index, x + 24 * pos, y + 24 * line, !alpha)
+      end
+    end
+  end
+  def m5_draw_actor_icons(actor, x, y, width = 96, col = 1)
+    icons = (actor.state_icons + actor.buff_icons)
+    m5_draw_icons(icons, x, y, width, col)
+  end
+end
+#--------------------------------------------------------------------------
 # ● 字体大小调整
 #
-#     window_font_size 设置默认大小
-#     font_size_change 调整文字大小
+#     m5_window_font_size 设置默认大小
+#     m5_font_size_change 调整文字大小
 #--------------------------------------------------------------------------
 class Window_Base
   alias m5_20140728_reset_font_settings reset_font_settings
   def reset_font_settings
     m5_20140728_reset_font_settings
-    font_size_change
+    m5_font_size_change
   end
   alias m5_20140728_create_contents create_contents
   def create_contents
     m5_20140728_create_contents
-    font_size_change
+    m5_font_size_change
   end
-  def font_size_change(size = window_font_size)
+  def m5_font_size_change(size = m5_window_font_size)
     return unless size
     while text_size("口").width > size
       contents.font.size -= 1
     end
   end
-  def window_font_size
+  def m5_window_font_size
     return nil
   end
 end
@@ -145,7 +166,7 @@ class Window_M5CalText < Window_Base
     @font_width = nil
     @font_height = nil
   end
-  def window_font_size;@font_width;end
+  def m5_window_font_size;@font_width;end
   def line_height
     @font_height ? @font_height : super
   end
@@ -241,3 +262,26 @@ class Font
     end
   end
 end
+=begin
+                   _ooOoo_ 
+                  o8888888o 
+                  88" . "88 
+                  (| -_- |) 
+                  O\  =  /O 
+               ____/`---'\____ 
+             .'  \\|     |//  `. 
+            /  \\|||  :  |||//  \ 
+           /  _||||| -:- |||||-  \ 
+           |   | \\\  -  /// |   | 
+           | \_|  ''\---/''  |   | 
+           \  .-\__  `-`  ___/-. / 
+         ___`. .'  /--.--\  `. . __ 
+      ."" '<  `.___\_<|>_/___.'  >'"". 
+     | | :  `- \`.;`\ _ /`;.`/ - ` : | | 
+     \  \ `-.   \_ __\ /__ _/   .-` /  / 
+======`-.____`-.___\_____/___.-`____.-'====== 
+                   `=---=' 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+           佛祖保佑       永无BUG
+=end
