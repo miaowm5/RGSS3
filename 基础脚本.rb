@@ -98,6 +98,7 @@ class Window_Base
   def m5_draw_icons(icons, x, y, width = 96, col = 1, enabled = [])    
     col.times do |line|
       temp_icons = icons[width * line / 24, width / 24]
+      return unless temp_icons
       temp_icons.each_with_index do |icon_index, pos|
         alpha = enabled[pos + width * line / 24]
         draw_icon(icon_index, x + 24 * pos, y + 24 * line, !alpha)
