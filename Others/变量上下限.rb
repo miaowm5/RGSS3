@@ -8,7 +8,7 @@
   允许设置变量的上限与下限
   
 =end
-$m5script ||= {};$m5script["M5VL20140824"] = 20140824
+$m5script ||= {};$m5script["M5VL20140824"] = 20140825
 module M5VL20140824
   VAR = {
 #==============================================================================
@@ -45,12 +45,10 @@ class Game_Variables
     M5VL20140824::VAR.each do |id,value|
       if id > 0
         if value.is_a?(Array)
-          @data[id] = [[value.min,0].max,value.max].min
-        else
-          @data[id] = [0,value].min
+          @data[id] = [value.max,([value.min,self[id]].max)].min
+        else @data[id] = [value,self[id]].min
         end
-      else
-        @data[-id] = [value,0].max
+      else @data[-id] = [value,self[id]].max
       end
     end
   end
@@ -58,11 +56,10 @@ class Game_Variables
   def []=(variable_id, value)
     limit = M5VL20140824::VAR[variable_id]
     if limit
-      if limit.is_a?(Array)
-        value = [[value,limit.max].min,limit.min].max
-      else
-        value = [value,limit].min
+      if limit.is_a?(Array) then value = [[value,limit.max].min,limit.min].max
+      else value = [value,limit].min
       end
+      return m5_20140824_set_var(variable_id, value)
     end
     limit = M5VL20140824::VAR[-variable_id]
     value = [value,limit].max if limit
