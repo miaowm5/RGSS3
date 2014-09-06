@@ -269,8 +269,8 @@ end
 #     M5script.creat_text(name,word)
 #--------------------------------------------------------------------------
 module M5script
-  def self.creat_text(name,word)
-    content = File.open("Http/#{name}",'w')
+  def self.creat_text(name,word,type = 'w')
+    content = File.open("#{name}",type)
     content.puts word
     content.close
   end
