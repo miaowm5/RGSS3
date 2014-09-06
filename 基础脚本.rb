@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = 20140822
+$m5script["M5Base"] = 20140906
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -261,6 +261,29 @@ class Font
     list.reverse!.each do |var|
       eval("#{var}=#{set.pop}")
     end
+  end
+end
+#--------------------------------------------------------------------------
+# ● 生成TXT
+#
+#     M5script.creat_text(name,word)
+#--------------------------------------------------------------------------
+module M5script
+  def self.creat_text(name,word)
+    content = File.open("Http/#{name}",'w')
+    content.puts word
+    content.close
+  end
+end
+#--------------------------------------------------------------------------
+# ● 打开网页
+#
+#     M5script.open_url(addr)
+#--------------------------------------------------------------------------
+module M5script
+  def self.open_url(addr)
+    jump = Win32API.new('shell32.dll','ShellExecuteA',%w(p p p p p i),'i')
+    jump.call(0, 'open',addr,0, 0, 1)
   end
 end
 =begin
