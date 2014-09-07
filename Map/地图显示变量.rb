@@ -22,50 +22,50 @@ module M5Var20140815
 
   添加内容的格式为：
 
-    需要设置的属性 => 属性的值 ,
+    需要设置的属性: 属性的值 ,
 
-  （※注意最后的逗号）
+  （※ 冒号和属性的值之间请加上空格，不要忘记每条设置最后的逗号）
 
   可以设置的属性如下：
 
-  :VAR      显示的变量的ID（必须填写）
-  :X        窗口左上角的X坐标
-  :Y        窗口左上角的Y坐标
-  :X2       窗口右下角的X坐标
-  :Y2       窗口右下角的Y坐标
-  :HINT1    在变量的数值前面显示的提示文字（前后要加双引号）
-  :HINT2    在变量的数值后面显示的提示文字（前后要加双引号）
-  :BACK     变量窗口的背景图片，文件放在Graphics/System/下（前后要加双引号）
-  :SWI      窗口的开关ID，当对应ID的开关打开时不显示这个窗口
-  :ONLY     当设置为 true 时，窗口将不显示变量的ID，只显示提示文字
+  VAR      显示的变量的ID（必须填写）
+  X        窗口左上角的X坐标
+  Y        窗口左上角的Y坐标
+  X2       窗口右下角的X坐标
+  Y2       窗口右下角的Y坐标
+  HINT1    在变量的数值前面显示的提示文字（前后要加双引号）
+  HINT2    在变量的数值后面显示的提示文字（前后要加双引号）
+  BACK     变量窗口的背景图片，文件放在Graphics/System/下（前后要加双引号）
+  SWI      窗口的开关ID，当对应ID的开关打开时不显示这个窗口
+  ONLY     当设置为 true 时，窗口将不显示变量的ID，只显示提示文字
             （不过变量的ID还是需要设置的）
-  :EVAL     窗口显示的内容变为代码的返回值，VAR属性将被忽略（需要双引号）
-            （※不建议新手使用）
-  :SCENE    窗口只在特定的场景才显示，如果不懂意思的话请不要设置这个属性  
+  EVAL     窗口显示的内容变为代码的返回值，VAR属性将被忽略（需要双引号）
+            （※ 如果不懂意思的话请不要设置这个属性）
+  SCENE    窗口只在特定的场景才显示，如果不懂意思的话请不要设置这个属性
   
 =end
 
   {
-  :VAR   => 1,
-  :X     => 0,
-  :X2    => 544,
-  :Y2    => 416,
-  :HINT1 => "1号变量的值是",
-  :HINT2 => "的说",
-  :SWI   => 1,
+  VAR:   1,
+  X:     0,
+  X2:    544,
+  Y2:    416,
+  HINT1: "1号变量的值是",
+  HINT2: "的说",
+  SWI:   2,
   },
 
   {
-  :VAR   => 2,  
-  :Y     => 120,
-  :HINT1 => "\\{\\i[10]2号变量的值是：\n",
-  :BACK  => "var",
+  VAR: 2,  
+  Y: 120,
+  HINT1: "\\{\\i[10]2号变量的值是：\n",
+  BACK: "var",
   },
   
   {
-  :EVAL  => "$game_player.x",
-  :HINT1 => "玩家的地图X坐标为：",
-  :SCENE => Scene_Menu,
+  EVAL:  "$game_player.x",
+  HINT1: "玩家的地图X坐标为：",
+  SCENE: Scene_Menu,
   },
   
 
@@ -216,6 +216,7 @@ class Scene_Base
   alias m5_20131103_start start
   def start
     m5_20131103_start
+    return unless m5_20140815_check_scene
     @m5_20140815_cal_size_window = Window_M5CalText.new
     @m5_20140815_var_windows = Array.new(M5Var20140815::VAR_CONFIG.size) do |i|
       config = M5Var20140815::VAR_CONFIG[i]      
@@ -224,14 +225,17 @@ class Scene_Base
       next unless m5_20140815_scene_need_show(config[:SCENE])
       Window_M5_20140815_Var.new(config,@m5_20140815_cal_size_window)
     end
-  end
-  def m5_20140815_scene_need_show(need = nil)
-    return false if need && !SceneManager.scene_is?(need)
+  end  
+  def m5_20140815_check_scene
     M5Var20140815::SCENE.each do |scene|
       return true if SceneManager.scene_is?(scene)
     end
     false
   end
+  def m5_20140815_scene_need_show(need = nil)
+    return false if need && !SceneManager.scene_is?(need)
+    true
+  end  
   alias m5_20131103_update update
   def update
     m5_20131103_update
