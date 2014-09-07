@@ -216,6 +216,7 @@ class Scene_Base
   alias m5_20131103_start start
   def start
     m5_20131103_start
+    return unless m5_20140815_check_scene
     @m5_20140815_cal_size_window = Window_M5CalText.new
     @m5_20140815_var_windows = Array.new(M5Var20140815::VAR_CONFIG.size) do |i|
       config = M5Var20140815::VAR_CONFIG[i]      
@@ -224,14 +225,17 @@ class Scene_Base
       next unless m5_20140815_scene_need_show(config[:SCENE])
       Window_M5_20140815_Var.new(config,@m5_20140815_cal_size_window)
     end
-  end
-  def m5_20140815_scene_need_show(need = nil)
-    return false if need && !SceneManager.scene_is?(need)
+  end  
+  def m5_20140815_check_scene
     M5Var20140815::SCENE.each do |scene|
       return true if SceneManager.scene_is?(scene)
     end
     false
   end
+  def m5_20140815_scene_need_show(need = nil)
+    return false if need && !SceneManager.scene_is?(need)
+    true
+  end  
   alias m5_20131103_update update
   def update
     m5_20131103_update
