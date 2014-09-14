@@ -42,7 +42,7 @@ class Game_CharacterBase
   alias m5_20140914_move_straight move_straight
   def move_straight(d, turn_ok = true)
     $m5script[:ScriptData][:M5FD20140914] = true
-    m5_20140914_move_straight(d, turn_ok = true)
+    m5_20140914_move_straight(d, turn_ok)
     $m5script[:ScriptData][:M5FD20140914] = false
   end
 end
