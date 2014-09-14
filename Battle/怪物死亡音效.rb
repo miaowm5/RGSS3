@@ -11,8 +11,8 @@
   如果文件不存在，则会播放默认音效
   
 =end
-$m5script ||= {};$m5script["M5ECS20140821"] = 20140821;
-$m5script["ScriptData"] ||= {}
+$m5script ||= {};$m5script[:M5ECS20140821] = 20140821;
+$m5script[:ScriptData] ||= {}
 module M5ECS20140821
 #==============================================================================
 # 设定部分
@@ -35,7 +35,7 @@ class Game_Enemy
   end
   def m5_20140821_judge_enemy_se
     sename = "Audio/Enemy/#{@enemy_id}"
-    $m5script["ScriptData"]["M5ECS20140821"] = sename unless \
+    $m5script[:ScriptData][:M5ECS20140821] = sename unless \
       Dir.glob(sename+ ".*").empty?
   end
 end
@@ -49,9 +49,9 @@ class << Sound
     m5_20140821_play_collapse(method(:m5_20140821_play_boss_collapse1))    
   end  
   def m5_20140821_play_collapse(method)
-    if $m5script["ScriptData"]["M5ECS20140821"]
-      Audio.se_play($m5script["ScriptData"]["M5ECS20140821"],80,100)
-      $m5script["ScriptData"]["M5ECS20140821"] = nil
+    if $m5script[:ScriptData][:M5ECS20140821]
+      Audio.se_play($m5script[:ScriptData][:M5ECS20140821],80,100)
+      $m5script[:ScriptData][:M5ECS20140821] = nil
     else
       method.call
     end
