@@ -7,13 +7,14 @@
 
 $m5script ||= {}
 $m5script["M5Base"] = 20140906
+$m5script[:M5Base] = 20140906
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
 #     M5script.version(ver) 检查脚本版本是否高于指定版本
 #--------------------------------------------------------------------------
 module M5script
-  def self.version(ver,hint = "喵呜喵5基础脚本版本过低！",key = "M5Base",h2="")
+  def self.version(ver,hint = "喵呜喵5基础脚本版本过低！",key = "M5Base", h2="")
     raise(h2) unless $m5script[key]
     raise(hint) if (ver > $m5script[key])
   end
@@ -266,7 +267,7 @@ end
 #--------------------------------------------------------------------------
 # ● 生成TXT
 #
-#     M5script.creat_text(name,word)
+#     M5script.creat_text(name,word,type)
 #--------------------------------------------------------------------------
 module M5script
   def self.creat_text(name,word,type = 'w')
@@ -282,8 +283,8 @@ end
 #--------------------------------------------------------------------------
 module M5script
   def self.open_url(addr)
-    jump = Win32API.new('shell32.dll','ShellExecuteA',%w(p p p p p i),'i')
-    jump.call(0, 'open',addr,0, 0, 1)
+    api = Win32API.new('shell32.dll','ShellExecuteA','pppppi','i')
+    api.call(0,'open',addr,0, 0, 1)
   end
 end
 =begin
