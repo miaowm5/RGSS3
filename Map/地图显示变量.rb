@@ -8,8 +8,8 @@
   在地图上显示变量，支持许多的自定义操作
 
 =end
-$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script["M5Base"]
-$m5script["M5Var20140815"] = 20140815;M5script.version(20140815)
+$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
+$m5script[:M5Var20140815] = 20140815;M5script.version(20140815)
 module M5Var20140815
   VAR_CONFIG =[
 =begin
