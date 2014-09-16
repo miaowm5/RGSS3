@@ -6,8 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = 20140906
-$m5script[:M5Base] = 20140906
+$m5script["M5Base"] = $m5script[:M5Base] = 20140916
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -112,9 +111,20 @@ class Window_Base
   end
 end
 #--------------------------------------------------------------------------
+# ● 获取控制符的参数（这个方法会破坏原始数据）
+#
+#     m5_obtain_escape_param(text)
+#--------------------------------------------------------------------------
+class Window_Base
+  def m5_obtain_escape_param(text)
+    text.slice!(/^\[.*?\]/)[1..-2] rescue ""
+  end
+end
+#--------------------------------------------------------------------------
 # ● 字体大小调整
 #
-#     m5_window_font_size 设置默认大小
+#     m5_font_width       默认文字宽度
+#     m5_font_height      默认文字高度
 #     m5_font_size_change 调整文字大小
 #--------------------------------------------------------------------------
 class Window_Base
@@ -128,25 +138,16 @@ class Window_Base
     m5_20140728_create_contents
     m5_font_size_change
   end
-  def m5_font_size_change(size = m5_window_font_size)
-    return unless size
-    while text_size("口").width > size
-      contents.font.size -= 1
+  def m5_font_size_change(width = m5_font_width, height = m5_font_height)    
+    if width
+      contents.font.size -= 1 while text_size("口").width > width
+    end
+    if height
+      contents.font.size -= 1 while text_size("口").height > height
     end
   end
-  def m5_window_font_size
-    return nil
-  end
-end
-#--------------------------------------------------------------------------
-# ● 获取控制符的参数（这个方法会破坏原始数据）
-#
-#     m5_obtain_escape_param(text)
-#--------------------------------------------------------------------------
-class Window_Base
-  def m5_obtain_escape_param(text)
-    text.slice!(/^\[.*?\]/)[1..-2] rescue ""
-  end
+  def m5_font_width;  return nil; end
+  def m5_font_height; return nil; end
 end
 #--------------------------------------------------------------------------
 # ● Window_M5CalText
@@ -155,25 +156,31 @@ end
 #     cal_all_text_height(text) 计算总高度
 #     cal_all_text_width(text)  计算最大宽度
 #     calc_line_width(text)     计算单行宽度
-#     font_width                字体的宽度
-#     font_height               字体的高度
+#     font_width                设置字体的宽度
+#     font_height               设置字体的高度
+#     line_height               设置每行文字的高度
 #--------------------------------------------------------------------------
 class Window_M5CalText < Window_Base
   attr_writer :font_width
   attr_writer :font_height
+  attr_writer :line_height
   def initialize
     super(0, 0, Graphics.width, Graphics.height)
     self.visible = false
     @text = ""
     @font_width = nil
     @font_height = nil
+    @line_height = nil
   end
-  def m5_window_font_size;@font_width;end
+  def m5_font_width;@font_width;end
+  def m5_font_height;@font_height;end
   def line_height
-    @font_height ? @font_height : super
+    if @line_height then return @line_height
+    elsif @font_height then return @font_height    
+    end
+    super
   end
   def cal_all_text_height(text)
-    contents.clear
     reset_font_settings
     @text = text
     all_text_height = 1
@@ -183,7 +190,6 @@ class Window_M5CalText < Window_Base
     return all_text_height
   end
   def cal_all_text_width(text)
-    contents.clear
     reset_font_settings
     @text = text
     all_text_width = 1
@@ -192,8 +198,7 @@ class Window_M5CalText < Window_Base
     end
     return all_text_width
   end
-  def calc_line_width(text)
-    contents.clear
+  def calc_line_width(text)    
     reset_font_settings
     pos = {:x => 0, :y => 0, :new_x => 0, :height => Graphics.height}
     process_character(text.slice!(0, 1), text, pos) until text.empty?
