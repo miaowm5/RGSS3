@@ -11,7 +11,7 @@
   在这张新地图上可以用事件指令之类的东西做出类似CG欣赏之类的功能
   
 =end
-$m5script ||= {};$m5script["M5NTC20140811"] = 20140811
+$m5script ||= {};$m5script[:M5NTC20140811] = 20140925
 module M5NTC20140811
   COMMAND = [
 #==============================================================================
@@ -83,6 +83,11 @@ end
 class Scene_Title
   alias m5_20140206_create_command_window create_command_window
   def create_command_window
+    temp_data = load_data("Data/System.rvdata2")
+    $data_system.start_map_id = temp_data.start_map_id
+    $data_system.start_x = temp_data.start_x
+    $data_system.start_y = temp_data.start_y
+    $data_system.opt_transparent = temp_data.opt_transparent
     m5_20140206_create_command_window
     @command_window.set_handler(:m5_20140811_ntc, method(:c_m5_20140811_ntc))
   end
