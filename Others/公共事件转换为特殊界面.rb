@@ -59,7 +59,7 @@ end # module M5CES20141001
 module M5CES20141001
   
 class Load < Game_Interpreter
-  def clear    
+  def clear
     super
     @open = []
     @command = []
@@ -68,13 +68,23 @@ class Load < Game_Interpreter
   end
   def setup(list)
     super(list, 0)
-    update while running?
+    update while running?    
     return @open,@command,@end
+  end
+  def wait_for_message;end
+  def run
+    wait_for_message    
+    while @list[@index] do
+      execute_command      
+      @index += 1
+    end    
+    Fiber.yield
+    @fiber = nil
   end
   def next_event
     @list[@index + 1]
   end
-  def execute_command
+  def execute_command    
     command = @list[@index]
     @params = command.parameters
     @indent = command.indent
@@ -123,13 +133,20 @@ class Interpreter < Game_Interpreter
   def wait(duration)
     Graphics.wait duration
   end
+  def wait_for_message;end
+  #--------------------------------------------------------------------------
+  # ● 背景卷动
+  #--------------------------------------------------------------------------  
+  def command_204
+    @method_list[:command_204].call(@params[0], @params[1], @params[2])
+  end
   #--------------------------------------------------------------------------
   # ● 显示图片
-  #--------------------------------------------------------------------------
+  #--------------------------------------------------------------------------  
   def command_231
     return unless @method_list
     if @params[3] == 0
-      x,y = @params[4],@params[5]      
+      x,y = @params[4],@params[5]
     else
       x,y = $game_variables[@params[4]],$game_variables[@params[5]]      
     end
@@ -178,17 +195,34 @@ class Window_Command < Window_Command
   attr_accessor :background
   attr_writer   :update_when_move
   attr_writer   :command
+  attr_writer   :cancel_enabled  
+  attr_writer   :lr_mode
   def initialize(command,interpreter)
     @command = command
     @interpreter = interpreter
     @window = Window_Status.new
-    @background = Plane.new
+    @background = Plane_Background.new
     @picture_sprites = []
-    @update_when_move = false
+    @update_when_move = @lr_mode = false
+    @cancel_enabled = true
     @choose_flag = false
-    @method_list = creat_method_list
+    creat_method_list
     super(0, 0)
     self.index = -1
+  end
+  def update
+    super
+    @background.update
+  end
+  def dispose
+    super
+    @window.dispose
+    @background.bitmap.dispose if @background.bitmap
+    @background.dispose
+    @picture_sprites.compact.each do |sprite|
+      sprite.bitmap.dispose if sprite.bitmap
+      sprite.dispose
+    end
   end
   def make_command_list
     @command.each do |command|
@@ -198,6 +232,7 @@ class Window_Command < Window_Command
   def window_height
     [super,Graphics.height].min
   end
+  
   def choose(index)
     return if @choose_flag
     @choose_flag = true
@@ -210,10 +245,34 @@ class Window_Command < Window_Command
     return if now_index == index
     process_ok if @update_when_move
   end
+  #--------------------------------------------------------------------------
+  # ● 光标移动
+  #--------------------------------------------------------------------------
   def cursor_up(wrap = false)
     return if index == -1
     super
   end
+  alias orign_cursor_up cursor_up
+  def cursor_up(wrap = false)
+    return if @lr_mode
+    orign_cursor_up(wrap)
+  end
+  alias orign_cursor_down cursor_down
+  def cursor_down(wrap = false)
+    return if @lr_mode
+    orign_cursor_down(wrap)
+  end
+  def cursor_right(wrap = false)
+    return unless @lr_mode
+    orign_cursor_down(wrap)
+  end
+  def cursor_left(wrap = false)
+    return unless @lr_mode
+    orign_cursor_up(wrap)    
+  end
+  #--------------------------------------------------------------------------
+  # ● 确定、取消键的处理
+  #--------------------------------------------------------------------------
   def process_ok
     if current_item_enabled?
       @interpreter.setup(@command[@index][1],@method_list)      
@@ -221,32 +280,29 @@ class Window_Command < Window_Command
     end
     self
   end
-  def cancel_enabled?;true;end  
+  def cancel_enabled?; @cancel_enabled; end
   def call_cancel_handler;SceneManager.return;end
   def call_handler_with_param(symbol,param)
     @handler[symbol].call(param) if handle?(symbol)
   end
-  def dispose
-    super
-    @window.dispose
-    @background.bitmap.dispose if @background.bitmap
-    @background.dispose
-    @picture_sprites.compact.each do |sprite|
-      sprite.bitmap.dispose if sprite.bitmap
-      sprite.dispose
-    end
-  end
-  def creat_method_list
-    list = {}    
-    self.methods.grep(/^command_(\d+)$/) do
-      key = $&.to_sym
-      list[key] = method(key)
-    end
-    return list
-  end
   #--------------------------------------------------------------------------
   # ● 设置指令
   #--------------------------------------------------------------------------
+  def creat_method_list
+    @method_list = {}
+    self.methods.grep(/^command_(\d+)$/) do
+      key = $&.to_sym
+      @method_list[key] = method(key)
+    end
+  end
+  def command_204(type,value,speed)
+    case type
+    when 2 then @background.set_y(- value, speed)
+    when 4 then @background.set_x(- value, speed)
+    when 6 then @background.set_x(value, speed)
+    when 8 then @background.set_y(value, speed)
+    end            
+  end
   def command_231(num,name,origin,x,y,zoom_x,zoom_y,opacity,type)    
     @picture_sprites[num] ||= Sprite.new
     @picture_sprites[num].bitmap.dispose if @picture_sprites[num].bitmap
@@ -274,7 +330,7 @@ class Window_Command < Window_Command
   end
   def command_355(script)
     eval(script)
-  end
+  end  
 end
 #--------------------------------------------------------------------------
 # ● Window_Status
@@ -289,6 +345,39 @@ class Window_Status < Window_Base
   end
   def create_contents
     super;self
+  end
+end
+#--------------------------------------------------------------------------
+# ● Plane_Background
+#--------------------------------------------------------------------------
+class Plane_Background < Plane
+  def initialize
+    super
+    @x = @y = @update_x = @update_y = 0    
+  end
+  def update    
+    return unless self.bitmap
+    @x += @update_x
+    @y += @update_y
+    self.ox, self.oy = @x, @y
+  end
+  def set_x(x, speed)
+    @x = self.ox
+    @update_x = move_speed(x, speed)
+  end
+  def set_y(y, speed)
+    @y = self.oy
+    @update_y = move_speed(y, speed)
+  end
+  def move_speed(value,speed)
+    case speed
+    when 1 then return value.to_f / 8
+    when 2 then return value.to_f / 4
+    when 3 then return value.to_f / 2
+    when 4 then return value.to_f * 1
+    when 5 then return value.to_f * 2
+    when 6 then return value.to_f * 4
+    end    
   end
 end
   
@@ -308,16 +397,17 @@ class Scene_M5CES20141001 < Scene_MenuBase
     @bgs = RPG::BGS.last
     @default_choose = 0
     creat_method_list
-    @interpreter.setup(@open_command,@method_list)
+    @interpreter.setup(@open_command,@method_list)    
     @window.command = load_events(@ev)
     @window.refresh
     @window.window.create_contents
+    Input.update
     @window.choose(@default_choose)
   end
   def terminate
     @interpreter.setup(@end_command,@method_list)    
     super
-  end  
+  end
   def creat_method_list
     @method_list = {}
     @window.methods.grep(/^command_(\d+)$/) do
@@ -334,29 +424,32 @@ class Scene_M5CES20141001 < Scene_MenuBase
     raise "公共事件读取失败！" unless ev
     ev_list = ev.list.clone
     @load = M5CES20141001::Load.new    
-    @open_command,@command_list,@end_command = @load.setup(ev_list)
+    @open_command,@command_list,@end_command = @load.setup(ev_list)    
     return @command_list
   end
   #--------------------------------------------------------------------------
   # ● Scene_动作
   #--------------------------------------------------------------------------
   def scene_back(value);@window.background.bitmap = Cache.picture(value);end
-  def command_choose(value);@default_choose = value - 1;end
-  def command_auto;@window.update_when_move = true;end
+  def default_choose(value);@default_choose = value - 1;end
+  def update_when_move(value = true);@window.update_when_move = value;end
   def command_x(value);@window.x = value;end
   def command_y(value);@window.y = value;end
   def command_width(value);@window.width = value.abs;end
   def command_height(value);@window.height = value.abs;end
   def command_hide;@window.hide;end
   def command_opacity(value = 0);@window.opacity = value;end
+  def cancel_enabled(value = false);@window.cancel_enabled = value;end
   def window_x(value);@window.window.x = value;end
   def window_y(value);@window.window.y = value;end
   def window_width(value);@window.window.width = value.abs;end
-  def window_height(value);@window.window.height = value.abs;end
-  def window_hide;@window.window.hide;end
-  def window_opacity(value = 0);@window.window.opacity = value;end
-  def bgm_replay;@bgm.play;end
-  def bgs_replay;@bgs.play;end
+  def window_height(value); @window.window.height = value.abs; end
+  def window_hide; @window.window.hide; end
+  def window_opacity(value = 0); @window.window.opacity = value; end
+  def lr_mode(value = true); @window.lr_mode = value; end
+  def hide_arrows(value = false); @window.arrows_visible = value; end
+  def bgm_replay; @bgm.play; end
+  def bgs_replay; @bgs.play; end
 end
 #--------------------------------------------------------------------------
 # ● Window_MenuCommand
@@ -389,8 +482,8 @@ end
 #--------------------------------------------------------------------------
 class Scene_M5CES20141001
   alias 界面背景      scene_back
-  alias 默认选择      command_choose
-  alias 自动更新      command_auto
+  alias 默认选择      default_choose
+  alias 自动更新      update_when_move
   alias 选择窗口X     command_x
   alias 选择窗口Y     command_y
   alias 选择窗口宽    command_width
@@ -405,4 +498,7 @@ class Scene_M5CES20141001
   alias 信息窗口透明  window_opacity
   alias 重播音乐      bgm_replay
   alias 重播声音      bgs_replay
+  alias 禁止取消      cancel_enabled
+  alias 横向按键      lr_mode
+  alias 隐藏箭头      hide_arrows
 end
