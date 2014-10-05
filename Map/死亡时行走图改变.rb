@@ -28,8 +28,8 @@
   可以设置角色作为跟随角色死亡时改变的行走图。
   
 =end
-$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script["M5Base"]
-$m5script["M5DC20140731"] = 20140731;M5script.version(20140731)
+$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
+$m5script[:M5DC20140731] = 20140731;M5script.version(20140731)
 module M5DC20140731
 #==============================================================================
 # 设定部分
