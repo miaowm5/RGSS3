@@ -12,7 +12,7 @@
   使用这个脚本以后，显示选项指令的“取消的时候 - 分支”这一功能将失效
   
 =end
-$m5script ||= {};$m5script[:M5CE20140927] = 20140927
+$m5script ||= {};$m5script[:M5CE20140927] = 20141109
 class Game_Interpreter  
   alias m5_20140927_setup setup
   def setup(list, event_id = 0)
@@ -47,4 +47,20 @@ class Game_Interpreter
       end      
     end    
   end
+end
+class Window_Message; attr_reader :position; end
+class Window_ChoiceList
+  alias m5_20141109_update_placement update_placement
+  def update_placement
+    m5_20141109_update_placement
+    self.y = [0,self.y].max
+  end
+  alias m5_20141109_fitting_height fitting_height
+  def fitting_height(line)
+    old_height = m5_20141109_fitting_height(line)
+    height = Graphics.height
+    height -= @message_window.height if @message_window.open?
+    height -= @message_window.y if @message_window.position == 1
+    return [height, old_height].min
+  end  
 end
