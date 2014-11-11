@@ -5,23 +5,32 @@
 
 【说明】
 
-  指定的开关打开的时候，对话中显示头像功能显示的头像将批量替换成其他头像
+  指定的开关打开或者队伍的队长为特定ID的角色时，
+  对话中显示头像功能显示的指定头像将批量替换成其他头像
   
-  修改的只是头像素材的文件名而已，头像的位置（这个素材中的第几个头像）并不会改变
-  
+  修改的只是头像素材的文件名而已，头像的位置（这个素材中的第几个头像）并不会改变  
   如果连位置都要修改的话……自己给我用PS去调整啦！
   
 =end
-$m5script ||= {};$m5script["M5MF20140805"] = 20140805
-module M5MF20140805
-  LIST = [
+$m5script ||= {};$m5script[:M5MF20140805] = 20141111
+module M5MF20140805;SWI = [
 #==============================================================================
 # 设定部分
-#==============================================================================
+#==============================================================================  
   
-  # 设置格式：
-  #  [开关的编号,需要替换的文件名(记得双引号),用于替换的文件名(记得双引号)],
-  # (双引号和逗号都必须是英文的，请不要忘记每条设置最后的逗号)    
+  # 设置特定开关打开时需要进行替换的头像，设置格式：
+  #  [开关的编号, 需要替换的头像文件名, 用于替换的头像文件名],
+  # (文件名的前后需要加上英文的双引号，请不要忘记每条设置最后的逗号)  
+  
+  [1,"Actor1","Spiritual"],
+  [2,"Actor2","Spiritual"],
+  
+  
+  ];LEADER = [ # 请不要删除本行  
+  
+  # 设置队伍第一名成员为指定角色时需要进行替换的头像，设置格式：
+  #  [第一名成员的角色ID, 需要替换的头像文件名, 用于替换的头像文件名],
+  # (文件名的前后需要加上英文的双引号，请不要忘记每条设置最后的逗号)
   
   [1,"Actor1","Spiritual"],
   [2,"Actor2","Spiritual"],
@@ -34,14 +43,19 @@ end
 class Game_Interpreter
   alias m5_20140805_command_101 command_101
   def command_101
-    list = M5MF20140805::LIST
-    swi_list = list.collect{|set|set[0]}
-    swi_list.each_with_index do |switch,index|
-      if $game_switches[switch] && @params[0] == list[index][1]
+    @params = @params.clone
+    m5_20141111_cfn(M5MF20140805::SWI,
+      Proc.new{|id| $game_switches[id]})
+    m5_20141111_cfn(M5MF20140805::LEADER,
+      Proc.new{|id| $game_party.members[0].id == id})
+    m5_20140805_command_101    
+  end
+  def m5_20141111_cfn(list,proc)
+    list.collect{|set| set[0]}.each_with_index do |id,index|
+      if proc.call(id) && @params[0] == list[index][1]
         @params[0] = list[index][2]
         break
       end
-    end
-    m5_20140805_command_101
+    end    
   end
 end
