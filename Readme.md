@@ -21,3 +21,5 @@
 <p>
 	<a href="http://mw-m5.lofter.com/">LOFTER</a>
 </p>
+<hr>
+Created By Mwm5(2014) All Rights Reserved
