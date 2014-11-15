@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20141107
+$m5script["M5Base"] = $m5script[:M5Base] = 20141113
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -30,7 +30,8 @@ end
 #     list     : 是否返回全部匹配结果的数组
 #--------------------------------------------------------------------------
 module M5script
-  def self.match_text(text, note, default, value, list)
+  def self.match_text(text, note, default, value, list)    
+    return list ? [default] : default if text.empty?
     all_result = []
     text.each_line do |line|
       line.chomp!
@@ -42,7 +43,7 @@ module M5script
       all_result.push result if result
     end
     all_result.push default if all_result.size == 0
-    return list ? all_result : all_result[0]  
+    return list ? all_result : all_result[0]
   end
 end
 #--------------------------------------------------------------------------
@@ -62,13 +63,20 @@ end
 #--------------------------------------------------------------------------
 module M5script
   def self.read_event_note(map,id,note,default = nil,value = true,list = false)
-    ev = load_data(sprintf("Data/Map%03d.rvdata2", map)).events[id]
-    return default unless ev
-    page = Game_Event.new(map,ev)
-    page.refresh
-    return default if page.empty?
+    begin
+      if map == $game_map.map_id then page = $game_map.events[id]
+      else
+        ev = load_data(sprintf("Data/Map%03d.rvdata2", map)).events[id]
+        page = Game_Event.new(map,ev)
+        page.refresh
+      end
+      return list ? [default] : default if page.empty?
+      ev_list = page.list
+    rescue
+      return list ? [default] : default
+    end
     text = ""
-    page.list.each do |command|
+    ev_list.each do |command|
       break if command.code != 108 && command.code != 408
       text += command.parameters[0] + "\n"
     end
@@ -76,40 +84,48 @@ module M5script
   end
 end
 #--------------------------------------------------------------------------
-# ● 自动更新释放的精灵类以及显示端口
-#
-#     Sprite_M5、Viewport_M5
+# ● 包含释放位图方法的精灵 Sprite_M5
 #--------------------------------------------------------------------------
-class Sprite_M5 < Sprite
-  def initialize(viewport=nil);super(viewport);end
+class Sprite_M5 < Sprite  
   def dispose
-    bitmap.dispose if bitmap
+    dispose_bitmap
     super
   end
+  def dispose_bitmap
+    self.bitmap.dispose if self.bitmap
+  end
 end
+#--------------------------------------------------------------------------
+# ● 显示端口 Viewport_M5
+#--------------------------------------------------------------------------
 class Viewport_M5 < Viewport
 end
+#--------------------------------------------------------------------------
+# ● 精灵组 Spriteset_M5
+#--------------------------------------------------------------------------
+class Spriteset_M5
+  def update;end;def dispose;end
+end
+#--------------------------------------------------------------------------
+# ● 自动更新释放精灵以及显示端口
+#--------------------------------------------------------------------------
 class Scene_Base
-  alias m5_20140703_update_all_windows update_all_windows
-  def update_all_windows
-    m5_20140703_update_all_windows
-    update_all_m5_sprite
-  end
-  def update_all_m5_sprite
+  alias m5_20141113_update_basic update_basic
+  def update_basic
+    m5_20141113_update_basic    
     instance_variables.each do |varname|
       ivar = instance_variable_get(varname)
-      ivar.update if ivar.is_a?(Sprite_M5)
+      ivar.update if ivar.is_a?(Sprite_M5) && !ivar.disposed?
+      ivar.update if ivar.is_a?(Spriteset_M5)
     end
   end
-  alias m5_20140703_dispose_all_windows dispose_all_windows
-  def dispose_all_windows
-    m5_20140703_dispose_all_windows
-    dispose_all_m5_sprite
-  end
-  def dispose_all_m5_sprite
+  alias m5_20141113_terminate terminate
+  def terminate
+    m5_20141113_terminate
     instance_variables.each do |varname|
       ivar = instance_variable_get(varname)
       ivar.dispose if ivar.is_a?(Sprite_M5)
+      ivar.dispose if ivar.is_a?(Spriteset_M5)
       ivar.dispose if ivar.is_a?(Viewport_M5)
     end
   end
@@ -260,7 +276,7 @@ class Window_M5Help < Window_Help
     super
     self.x, self.y ,self.width, self.height = x, y, width, height    
     create_contents
-  end  
+  end
 end
 #--------------------------------------------------------------------------
 # ● 字体的设置
