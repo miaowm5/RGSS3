@@ -9,9 +9,8 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20140815;M5script.version(20140815)
-module M5Var20140815
-  VAR_CONFIG =[
+$m5script[:M5Var20140815] = 20141202;M5script.version(20141113)
+module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
 #  设定部分
@@ -37,6 +36,7 @@ module M5Var20140815
   HINT2    在变量的数值后面显示的提示文字（前后要加双引号）
   BACK     变量窗口的背景图片，文件放在Graphics/System/下（前后要加双引号）
   SWI      窗口的开关ID，当对应ID的开关打开时不显示这个窗口
+  INVERSE  当设置为 true 时，对应ID的开关打开时才显示这个窗口
   ONLY     当设置为 true 时，窗口将不显示变量的ID，只显示提示文字
             （不过变量的ID还是需要设置的）
   EVAL     窗口显示的内容变为代码的返回值，VAR属性将被忽略（需要双引号）
@@ -50,16 +50,26 @@ module M5Var20140815
   X:     0,
   X2:    544,
   Y2:    416,
-  HINT1: "1号变量的值是",
+  HINT1: "\\i[10]1号变量的值是",
   HINT2: "的说",
   SWI:   2,
   },
 
   {
-  VAR: 2,  
-  Y: 120,
-  HINT1: "\\{\\i[10]2号变量的值是：\n",
+  VAR: 2,
+  X2: 544,
+  HINT1: "2号变量的\n值是：",
   BACK: "var",
+  },
+  
+  {
+  VAR:     1,
+  X:       0,
+  HINT1:   "这个是不显示变量数值的窗口\n",
+  HINT2:   "仅当2号开关打开时才显示",
+  ONLY:    true,
+  SWI:     2,
+  INVERSE: true,
   },
   
   {
@@ -71,11 +81,13 @@ module M5Var20140815
 
   ] # 请不要删除这行
 
-  Z = 200              # 如果窗口遮住其他不希望遮住的内容了，请调小这个数值
+  Z = 200             # 如果窗口遮住其他不希望遮住的内容了，请调小这个数值
 
-  SWI = 1              # 对应ID的开关打开时不在地图上显示变量
+  SWI = 1             # 对应ID的开关打开时不显示变量，这个设置优先于各个窗口的设置
   
-  SCENE = [Scene_Map]  # 需要显示变量窗口的场景，不知道是什么意思的话请不要修改
+    SWI_INVERSE = false  # 设置为 true 时，上方对应ID的开关打开时才显示变量
+  
+  SCENE = [Scene_Map] # 需要显示变量窗口的场景，不知道是什么意思的话请不要修改
 
 #==============================================================================
 #  设定结束
@@ -103,17 +115,17 @@ class Window_M5_20140815_Var < Window_Base
   # ● 获取窗口的设置
   #--------------------------------------------------------------------------
   def get_config(config)
-    @var = config[:VAR]
-    @eval = config[:EVAL]
+    @var,@eval = config[:VAR],config[:EVAL]    
     @x,@y = config[:X],config[:Y]
     @x2,@y2 = config[:X2],config[:Y2]
     @hint1,@hint2 = config[:HINT1],config[:HINT2]
     @back = config[:BACK]
-    @swi = config[:SWI]
+    @swi = config[:SWI]    
     @only = config[:ONLY]
     @hint1 ||= ""
     @hint2 ||= ""
-    @swi ||= 0    
+    @swi ||= 0
+    @swi *= -1 if config[:INVERSE]
   end
   #--------------------------------------------------------------------------
   # ● 显示窗口的背景
@@ -121,45 +133,60 @@ class Window_M5_20140815_Var < Window_Base
   def create_back_sprite
     return unless @back
     self.opacity = 0
-    return if Dir.glob("Graphics/System/" + @back + ".*").empty?
+    bitmap = Cache.system(@back) rescue nil
+    return unless bitmap
     @background_sprite = Sprite.new
     @background_sprite.z = self.z - 1
-    @background_sprite.bitmap = Cache.system(@back)
+    @background_sprite.bitmap = bitmap
   end
   #--------------------------------------------------------------------------
   # ● 更新
   #--------------------------------------------------------------------------
   def update
     super
-    if $game_switches[SWI] or $game_switches[@swi]
-      @background_sprite.opacity = 0 if @background_sprite and \
-      @background_sprite.opacity != 0
-      close if open?
-      return
-    end
+    return if update_close_judge    
     @background_sprite.opacity = 255 if @background_sprite and \
     @background_sprite.opacity != 255
     open if close?
     update_content
   end
   #--------------------------------------------------------------------------
+  # ● 更新窗口的关闭判断
+  #--------------------------------------------------------------------------
+  def update_close_judge    
+    if close_judge
+      @background_sprite.opacity = 0 if @background_sprite and \
+      @background_sprite.opacity != 0
+      close if open?
+      return true
+    end
+    false
+  end
+  #--------------------------------------------------------------------------
+  # ● 窗口是否应该关闭?
+  #--------------------------------------------------------------------------
+  def close_judge    
+    return true if $game_switches[SWI]  && !SWI_INVERSE
+    return true if !$game_switches[SWI] &&  SWI_INVERSE    
+    if @swi >= 0 then return true if $game_switches[@swi]
+    else return true if !$game_switches[-@swi]
+    end
+    false    
+  end
+  #--------------------------------------------------------------------------
   # ● 更新窗口内容
   #--------------------------------------------------------------------------
   def update_content
-    if @eval
-      refresh if eval(@eval) != @cont
-    else
-      refresh if $game_variables[@var] != @cont
+    if @eval then refresh if eval(@eval) != @cont
+    else refresh if $game_variables[@var] != @cont
     end
   end
   #--------------------------------------------------------------------------
   # ● 描绘文字
   #--------------------------------------------------------------------------
   def refresh
-    if @eval
-      @cont = eval(@eval)
-    else
-      @cont = $game_variables[@var]
+    if @eval then @cont = eval(@eval)
+    else @cont = $game_variables[@var]
     end
     @word = "#{@hint1}#{@only ? "" : @cont}#{@hint2}"
     update_placement
@@ -171,14 +198,12 @@ class Window_M5_20140815_Var < Window_Base
   # ● 更新窗口大小
   #--------------------------------------------------------------------------
   def update_placement
-    if @x && @x2
-      self.width = (@x2 - @x).abs
+    if @x && @x2 then self.width = (@x2 - @x).abs
     else
       self.width  = @size_window.cal_all_text_width(@word)
       self.width += standard_padding * 2
     end
-    if @y && @y2
-      self.height = (@y2 - @y).abs
+    if @y && @y2 then self.height = (@y2 - @y).abs
     else
       self.height = @size_window.cal_all_text_height(@word)
       self.height += standard_padding * 2
@@ -202,17 +227,17 @@ class Window_M5_20140815_Var < Window_Base
   # ● 释放窗口
   #--------------------------------------------------------------------------
   def dispose
-    super    
-    if @background_sprite
-      @background_sprite.bitmap.dispose if @background_sprite.bitmap
-      @background_sprite.dispose
-    end
+    super
+    @background_sprite.dispose if @background_sprite    
   end
 end
 #--------------------------------------------------------------------------
 # ● Scene_Base
 #--------------------------------------------------------------------------
 class Scene_Base
+  #--------------------------------------------------------------------------
+  # ● 生成窗口
+  #--------------------------------------------------------------------------
   alias m5_20131103_start start
   def start
     m5_20131103_start
@@ -225,27 +250,39 @@ class Scene_Base
       next unless m5_20140815_scene_need_show(config[:SCENE])
       Window_M5_20140815_Var.new(config,@m5_20140815_cal_size_window)
     end
-  end  
+  end
+  #--------------------------------------------------------------------------
+  # ● 检查是否是指定场景
+  #--------------------------------------------------------------------------
   def m5_20140815_check_scene
     M5Var20140815::SCENE.each do |scene|
       return true if SceneManager.scene_is?(scene)
     end
     false
   end
+  #--------------------------------------------------------------------------
+  # ● 检查场景
+  #--------------------------------------------------------------------------
   def m5_20140815_scene_need_show(need = nil)
     return false if need && !SceneManager.scene_is?(need)
     true
-  end  
-  alias m5_20131103_update update
+  end
+  #--------------------------------------------------------------------------
+  # ● 更新窗口
+  #--------------------------------------------------------------------------
+  alias m5_20131103_update update  
   def update
     m5_20131103_update
-    @m5_20140815_var_windows.each {|window| window.update if window} if \
-      @m5_20140815_var_windows
+    return unless @m5_20140815_var_windows
+    @m5_20140815_var_windows.each {|window| window.update if window}    
   end
+  #--------------------------------------------------------------------------
+  # ● 释放窗口
+  #--------------------------------------------------------------------------
   alias m5_20131103_terminate terminate
   def terminate
     m5_20131103_terminate
-    @m5_20140815_var_windows.each {|window| window.dispose if window} if \
-      @m5_20140815_var_windows
+    return unless @m5_20140815_var_windows
+    @m5_20140815_var_windows.each {|window| window.dispose if window}
   end
 end
