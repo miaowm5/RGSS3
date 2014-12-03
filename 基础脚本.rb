@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20141113
+$m5script["M5Base"] = $m5script[:M5Base] = 20141204
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -273,7 +273,7 @@ end
 class Window_M5Help < Window_Help
   def initialize(line_number = 2, x = 0, y = 0, width = Graphics.width, 
       height = fitting_height(line_number))
-    super
+    super(line_number)
     self.x, self.y ,self.width, self.height = x, y, width, height    
     create_contents
   end
