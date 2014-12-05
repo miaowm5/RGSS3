@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20141204
+$m5script["M5Base"] = $m5script[:M5Base] = 20141205
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -240,7 +240,7 @@ class Window_M5CalText < Window_Base
   end
   def cal_all_text_height(text)
     reset_font_settings
-    @text = text
+    @text = text.clone
     all_text_height = 1
     convert_escape_characters(@text).each_line do |line|
       all_text_height += calc_line_height(line, false)
@@ -249,15 +249,16 @@ class Window_M5CalText < Window_Base
   end
   def cal_all_text_width(text)
     reset_font_settings
-    @text = text
+    @text = text.clone
     all_text_width = 1
     convert_escape_characters(@text).each_line do |line|
       all_text_width = [all_text_width,calc_line_width(line)].max
     end
     return all_text_width
   end
-  def calc_line_width(text)
+  def calc_line_width(target)    
     reset_font_settings
+    text = target.clone
     pos = {:x => 0, :y => 0, :new_x => 0, :height => Graphics.height}
     process_character(text.slice!(0, 1), text, pos) until text.empty?
     return pos[:x]
