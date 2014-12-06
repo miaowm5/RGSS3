@@ -4,39 +4,39 @@
 ===============================================================================
 
   【说明】
-  
+
   显示文章的自动换行
 
 =end
-$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script["M5Base"]
-$m5script["M5AM20140815"] = 20140815;M5script.version(20140815)
+$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
+$m5script[:M5AM20140815] = 20140815;M5script.version(20140815)
 module M5AM20140815
 #==============================================================================
 #  设定部分
 #==============================================================================
 
   SWI = 0
-  
+
   # 这里设置一个开关的ID，开关开启则不使用自动换行
   # 不需要的话直接设置成0就好了
-  
+
   SPA = -4
-  
+
   # 这里设置自动换行的位置，数字越大，每行显示的文字越少
-  
+
   TYPE = 1
-  
+
   # 设置为 0 时脚本将切换到最大兼容模式，
   # 最大兼容模式下，放大/缩小文字可能出现问题，下方的两个设置将失效
   # 但是最大兼容模式下脚本能与更多的文字类脚本相兼容
-  
+
   IGNOR = [",",".","，","。"]
-  
+
   # 这里设置不需要自动换行的符号，当文章处于这个符号位置时不自动换行
   # 每个符号需要用英文双引号括起来，后面记得加上英文逗号
-  
+
   HYPHEN = false
-  
+
   # 设置为true时，英文单词在自动换行时会添加连字符
 
 #==============================================================================
@@ -51,7 +51,7 @@ class Game_Message;attr_accessor   :texts;end
 # ● 用于自动换行的窗口
 #--------------------------------------------------------------------------
 class Window_M5_20140814_Message < Window_Base
-  include M5AM20140815  
+  include M5AM20140815
   def initialize
     super(0, 0, 0, 0)
     self.visible = false
@@ -62,7 +62,7 @@ class Window_M5_20140814_Message < Window_Base
   # ● 调用部分
   #--------------------------------------------------------------------------
   def start(width,font,new_line_x)
-    return if $game_switches[SWI]    
+    return if $game_switches[SWI]
     @width = width + SPA
     @new_line_x = new_line_x
     contents.font.m5_set_all_setting(font)
@@ -84,14 +84,14 @@ class Window_M5_20140814_Message < Window_Base
     process_all_text
     @text.push @string if @string
     $game_message.texts = @text
-  end  
+  end
   def process_all_text
     text = convert_escape_characters($game_message.all_text)
     pos = {}
     new_page(text, pos)
     process_character(text.slice!(0, 1), text, pos) until text.empty?
   end
-  def new_page(text, pos)    
+  def new_page(text, pos)
     pos[:x] = new_line_x
     pos[:y] = 0
     pos[:new_x] = new_line_x
@@ -109,7 +109,7 @@ class Window_M5_20140814_Message < Window_Base
     result = super
     @string += "[#{result}]"
     result
-  end  
+  end
   alias m5_20140815_process_escape_character process_escape_character
   def process_escape_character(code, text, pos)
     @string += '\\'
@@ -124,7 +124,7 @@ class Window_M5_20140814_Message < Window_Base
     when 'MOOD'
       return unless $m5script["M5FaceMood"]
       m5_obtain_escape_param(text)
-    when 'NAME'      
+    when 'NAME'
       m5_obtain_escape_param(text)
     when 'W','NW'
       return unless $m5script["M5MessageTime"]
@@ -135,7 +135,7 @@ class Window_M5_20140814_Message < Window_Base
       contents.font.name = Font.exist?(name) ? name : Font.default_name
     else
       m5_20140815_process_escape_character(code, text, pos)
-    end    
+    end
   end
   #--------------------------------------------------------------------------
   # ● 普通文字的处理
@@ -167,7 +167,7 @@ class Window_Message
   alias m5_20140807_initialize initialize
   def initialize
     m5_20140807_initialize
-    @m5_20140807_cal = Window_M5_20140814_Message.new    
+    @m5_20140807_cal = Window_M5_20140814_Message.new
   end
   alias m5_20140807_dispose dispose
   def dispose
@@ -185,11 +185,11 @@ class Window_Message
   # ● 自动换行保留字体设置
   #--------------------------------------------------------------------------
   alias m5_20140815_need_new_page? need_new_page?
-  def need_new_page?(text, pos)    
-    if m5_20140815_need_new_page?(text, pos)      
+  def need_new_page?(text, pos)
+    if m5_20140815_need_new_page?(text, pos)
       @m5_20140815_set = contents.font.m5_return_all_setting
       return true
-    end    
+    end
     false
   end
   alias m5_20140815_new_page new_page
@@ -214,7 +214,7 @@ class Window_Message
       contents.width && !$game_switches[M5AM20140815::SWI]
       font = contents.font.m5_return_all_setting
       process_new_line(c, pos)
-      contents.font.m5_set_all_setting(font)      
+      contents.font.m5_set_all_setting(font)
       pos[:height] = calc_line_height(c)
     end
   end
