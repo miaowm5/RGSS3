@@ -1,11 +1,11 @@
 =begin
 ===============================================================================
- 对话显示姓名 By喵呜喵5
+  对话显示姓名 By喵呜喵5
 ===============================================================================
 
 【说明】
 
-  通过在对话中加入
+  通过在对话开头加入
 
     \name[姓名]
 
@@ -13,7 +13,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Name20141004] = 20141004;M5script.version(20140916)
+$m5script[:M5Name20141004] = 20141208;M5script.version(20141208)
 module M5Name20141004
 #==============================================================================
 #  设定部分
@@ -88,24 +88,22 @@ class Window_Message
   alias m5_20141004_draw_face draw_face
   def draw_face *arg
     if @m5_name
-      temp_font = contents.font.m5_return_all_setting
+      temp_font = contents.font.m5_return_all_setting      
       contents.font.name = M5Name20141004::FONT
       contents.font.size = M5Name20141004::SIZE
       contents.font.color = M5Name20141004::COLOR
       contents.font.out_color = M5Name20141004::OUT_COLOR
-
       contents.font.bold = M5Name20141004::SET[0]
       contents.font.italic = M5Name20141004::SET[1]
       contents.font.shadow = M5Name20141004::SET[2]
       contents.font.outline = M5Name20141004::SET[3]
-
       name_height = text_size(@m5_name).height
       m5_20141004_draw_back(name_height)
       draw_text([new_line_x + M5Name20141004::NAME_X,0].max,
         M5Name20141004::NAME_Y,self.width - new_line_x,
         name_height +[M5Name20141004::NAME_Y,0].max,@m5_name,
-        M5Name20141004::ALIGN)
-      contents.font.m5_set_all_setting(temp_font)
+        M5Name20141004::ALIGN)      
+      contents.font.m5_set_all_setting(temp_font)      
       @m5_name = name_height
     end
     m5_20141004_draw_face *arg
