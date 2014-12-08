@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20141205
+$m5script["M5Base"] = $m5script[:M5Base] = 20141208
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -84,15 +84,14 @@ module M5script
   end
 end
 #--------------------------------------------------------------------------
-# ● 包含释放位图方法的精灵 Sprite_M5
+# ● 精灵 Sprite_M5
 #--------------------------------------------------------------------------
 class Sprite_M5 < Sprite  
   def dispose
     dispose_bitmap
     super
   end
-  def dispose_bitmap
-    self.bitmap.dispose if self.bitmap
+  def dispose_bitmap    
   end
 end
 #--------------------------------------------------------------------------
@@ -288,15 +287,14 @@ end
 class Font
   def m5_return_all_setting
     set = [self.name,self.size,self.bold,self.italic,self.outline,self.shadow,
-      "Color.new#{self.color}","Color.new#{self.out_color}"]
-    instance_variables.each {|var| set.push instance_variable_get(var) }
+      "Color.new#{self.color}","Color.new#{self.out_color}"]    
     return set
   end
   def m5_set_all_setting(set)
-    instance_variables.reverse!.each {|var| instance_variable_set(var, set.pop)}    
-    list = %w[self.name self.size self.bold self.italic self.outline 
+    list = %w[self.size self.bold self.italic self.outline 
       self.shadow self.color self.out_color]
-    list.reverse!.each {|var| eval("#{var}=#{set.pop}") }    
+    list.reverse!.each {|var| eval("#{var}=#{set.pop}") }
+    self.name = set.pop
   end
 end
 #--------------------------------------------------------------------------
