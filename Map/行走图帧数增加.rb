@@ -33,11 +33,15 @@ class Game_CharacterBase
       @m5_20150121_pattern[1] %= @m5_20150121_pattern[0]
     end
   end
-  alias m5_20150121_update_stop update_stop
-  def update_stop
-    m5_20150121_update_stop
-    return if @step_anime || !@m5_20150121_pattern
-    @m5_20150121_pattern[1] = @m5_20150121_pattern[0] / 2
+  alias m5_20150121_update_anime_count update_anime_count
+  def update_anime_count
+    return m5_20150121_update_anime_count unless @m5_20150121_pattern
+    if moving? && @walk_anime
+      @anime_count += (@m5_20150121_pattern[0] - 1) / 3.0 * 1.5
+    elsif @m5_20150121_pattern[1] != @m5_20150121_pattern[0] / 2
+      @pattern = @original_pattern + 1
+    end
+    m5_20150121_update_anime_count
   end
   alias m5_20150121_straighten straighten
   def straighten
