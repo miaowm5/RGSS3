@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20141208
+$m5script["M5Base"] = $m5script[:M5Base] = 20150129
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -23,22 +23,22 @@ end
 #
 #     M5script.match_text(text, note, default, value, list)
 #
-#     text     : 文本内容
-#     note     : 需要匹配的文字
+#     text     : 文本内容(string)
+#     note     : 需要匹配的文字(string)
 #     default  : 缺省值
-#     value    : 匹配文字是否需要包含结果
-#     list     : 是否返回全部匹配结果的数组
+#     value    : 匹配文字是否需要包含结果(true/false)
+#     list     : 是否返回全部匹配结果的数组(true/false)
 #--------------------------------------------------------------------------
 module M5script
-  def self.match_text(text, note, default, value, list)    
+  def self.match_text(text, note, default, value, list)
     return list ? [default] : default if text.empty?
     all_result = []
     text.each_line do |line|
       line.chomp!
       if value
-        result = /^\s*<\s*#{note}\s+(\S+)\s*>\s*$/ =~ line ? $1 : nil        
+        result = /^\s*<\s*#{note}\s+(\S+)\s*>\s*$/ =~ line ? $1 : nil
       else
-        result = /^\s*<\s*#{note}\s*>\s*$/ =~ line ? true : nil        
+        result = /^\s*<\s*#{note}\s*>\s*$/ =~ line ? true : nil
       end
       all_result.push result if result
     end
@@ -80,18 +80,29 @@ module M5script
       break if command.code != 108 && command.code != 408
       text += command.parameters[0] + "\n"
     end
-    M5script.match_text(text, note, default, value, list)    
+    M5script.match_text(text, note, default, value, list)
+  end
+end
+#--------------------------------------------------------------------------
+# ● 读取地图备注
+#
+#     M5script.read_map_note(map, note, default, value, list)
+#--------------------------------------------------------------------------
+module M5script
+  def self.read_map_note(map,note,default = nil,value = true,list = false)
+    text = load_data(sprintf("Data/Map%03d.rvdata2", map)).note
+    M5script.match_text(text, note, default, value, list)
   end
 end
 #--------------------------------------------------------------------------
 # ● 精灵 Sprite_M5
 #--------------------------------------------------------------------------
-class Sprite_M5 < Sprite  
+class Sprite_M5 < Sprite
   def dispose
     dispose_bitmap
     super
   end
-  def dispose_bitmap    
+  def dispose_bitmap
   end
 end
 #--------------------------------------------------------------------------
@@ -111,7 +122,7 @@ end
 class Scene_Base
   alias m5_20141113_update_basic update_basic
   def update_basic
-    m5_20141113_update_basic    
+    m5_20141113_update_basic
     instance_variables.each do |varname|
       ivar = instance_variable_get(varname)
       ivar.update if ivar.is_a?(Sprite_M5) && !ivar.disposed?
@@ -155,7 +166,7 @@ module M5script;module M5_Window_Gauge
   def m5_draw_gauge(now, max, vocab, color, x, y, width = 124)
     draw_gauge(x, y, width, [now.to_f/max,1].min, color[0], color[1])
     change_color(color[2])
-    draw_text(x, y, 30, line_height, vocab)    
+    draw_text(x, y, 30, line_height, vocab)
     draw_current_and_max_values(x, y, width, now, max, color[3], color[4])
   end
 end;end
@@ -167,7 +178,7 @@ end;end
 #     m5_draw_icons(icons, x, y, width, col, enabled) 多行描绘图标
 #--------------------------------------------------------------------------
 module M5script;module M5_Window_Icons
-  def m5_draw_icons(icons, x, y, width = 96, col = 1, enabled = [])    
+  def m5_draw_icons(icons, x, y, width = 96, col = 1, enabled = [])
     col.times do |line|
       temp_icons = icons[width * line / 24, width / 24]
       return unless temp_icons
@@ -188,14 +199,15 @@ end;end
 #     m5_font_size_change 调整文字大小
 #--------------------------------------------------------------------------
 module M5script;module M5_Window_FontSize
-  def m5_font_size_change(width = m5_font_width, height = m5_font_height)    
-    contents.font.size -= 1 while text_size("口").width > width if width    
-    contents.font.size -= 1 while text_size("口").height > height if height    
+  def m5_font_size_change(width = m5_font_width, height = m5_font_height)
+    contents.font.size = 40
+    contents.font.size -= 1 while text_size("口").width > width if width
+    contents.font.size -= 1 while text_size("口").height > height if height
   end
   def m5_font_width;  return nil; end
   def m5_font_height; return nil; end
 end;end
-class Window_Base  
+class Window_Base
   alias m5_20140728_reset_font_settings reset_font_settings
   def reset_font_settings
     m5_20140728_reset_font_settings
@@ -255,7 +267,7 @@ class Window_M5CalText < Window_Base
     end
     return all_text_width
   end
-  def calc_line_width(target)    
+  def calc_line_width(target)
     reset_font_settings
     text = target.clone
     pos = {:x => 0, :y => 0, :new_x => 0, :height => Graphics.height}
@@ -271,10 +283,10 @@ end
 #     Window_M5Help
 #--------------------------------------------------------------------------
 class Window_M5Help < Window_Help
-  def initialize(line_number = 2, x = 0, y = 0, width = Graphics.width, 
+  def initialize(line_number = 2, x = 0, y = 0, width = Graphics.width,
       height = fitting_height(line_number))
     super(line_number)
-    self.x, self.y ,self.width, self.height = x, y, width, height    
+    self.x, self.y ,self.width, self.height = x, y, width, height
     create_contents
   end
 end
@@ -287,11 +299,11 @@ end
 class Font
   def m5_return_all_setting
     set = [self.name,self.size,self.bold,self.italic,self.outline,self.shadow,
-      "Color.new#{self.color}","Color.new#{self.out_color}"]    
+      "Color.new#{self.color}","Color.new#{self.out_color}"]
     return set
   end
   def m5_set_all_setting(set)
-    list = %w[self.size self.bold self.italic self.outline 
+    list = %w[self.size self.bold self.italic self.outline
       self.shadow self.color self.out_color]
     list.reverse!.each {|var| eval("#{var}=#{set.pop}") }
     self.name = set.pop
@@ -321,24 +333,24 @@ module M5script
   end
 end
 =begin
-                   _ooOoo_ 
-                  o8888888o 
-                  88" . "88 
-                  (| -_- |) 
-                  O\  =  /O 
-               ____/`---'\____ 
-             .'  \\|     |//  `. 
-            /  \\|||  :  |||//  \ 
-           /  _||||| -:- |||||-  \ 
-           |   | \\\  -  /// |   | 
-           | \_|  ''\---/''  |   | 
-           \  .-\__  `-`  ___/-. / 
-         ___`. .'  /--.--\  `. . __ 
-      ."" '<  `.___\_<|>_/___.'  >'"". 
-     | | :  `- \`.;`\ _ /`;.`/ - ` : | | 
-     \  \ `-.   \_ __\ /__ _/   .-` /  / 
-======`-.____`-.___\_____/___.-`____.-'====== 
-                   `=---=' 
+                   _ooOoo_
+                  o8888888o
+                  88" . "88
+                  (| -_- |)
+                  O\  =  /O
+               ____/`---'\____
+             .'  \\|     |//  `.
+            /  \\|||  :  |||//  \
+           /  _||||| -:- |||||-  \
+           |   | \\\  -  /// |   |
+           | \_|  ''\---/''  |   |
+           \  .-\__  `-`  ___/-. /
+         ___`. .'  /--.--\  `. . __
+      ."" '<  `.___\_<|>_/___.'  >'"".
+     | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+     \  \ `-.   \_ __\ /__ _/   .-` /  /
+======`-.____`-.___\_____/___.-`____.-'======
+                   `=---='
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
            佛祖保佑       永无BUG
