@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20141210;M5script.version(20141208)
+$m5script[:M5Var20140815] = 20150129;M5script.version(20150129)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -34,6 +34,8 @@ module M5Var20140815;VAR_CONFIG =[
   Y2       窗口右下角的Y坐标
   HINT1    在变量的数值前面显示的提示文字（前后要加双引号）
   HINT2    在变量的数值后面显示的提示文字（前后要加双引号）
+  POSX     窗口文字的起始X坐标
+  POSY     窗口文字的起始Y坐标
   BACK     变量窗口的背景图片，文件放在Graphics/System/下（前后要加双引号）
   SX       变量窗口的背景图片X坐标
   SY       变量窗口的背景图片Y坐标
@@ -55,6 +57,7 @@ module M5Var20140815;VAR_CONFIG =[
   HINT1: "\\i[10]1号变量的值是",
   HINT2: "的说",
   SWI:   2,
+  POSX: 100,
   },
 
   {
@@ -117,6 +120,8 @@ class Window_Var < Window_Base
     @config[:SY] ||= 0
     @config[:HINT1] ||= ""
     @config[:HINT2] ||= ""
+    @config[:POSX] ||= 0
+    @config[:POSY] ||= 0
   end
   #--------------------------------------------------------------------------
   # ● 显示窗口的背景
@@ -176,6 +181,15 @@ class Window_Var < Window_Base
     end
   end
   #--------------------------------------------------------------------------
+  # ● 设置计算文字大小的窗口
+  #--------------------------------------------------------------------------
+  def set_size_window
+    size = text_size("口")
+    @size_window.font_width = size.width
+    @size_window.font_height = size.height
+    @size_window.line_height = [line_height, contents.font.size].max
+  end
+  #--------------------------------------------------------------------------
   # ● 描绘文字
   #--------------------------------------------------------------------------
   def refresh
@@ -183,10 +197,11 @@ class Window_Var < Window_Base
     else @cont = $game_variables[@config[:VAR]]
     end
     @word = "#{@config[:HINT1]}#{@config[:ONLY] ? "" : @cont}#{@config[:HINT2]}"
+    set_size_window
     update_placement
     update_position
     contents.clear
-    draw_text_ex(0,-2, @word)
+    draw_text_ex(@config[:POSX], @config[:POSY], @word)
   end
   #--------------------------------------------------------------------------
   # ● 更新窗口大小
