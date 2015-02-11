@@ -335,6 +335,7 @@ end
 #--------------------------------------------------------------------------
 # ● 获取未模糊的场景截图
 #
+#     SceneManager.m5_snapshot_for_background
 #     SceneManager.m5_background_bitmap
 #--------------------------------------------------------------------------
 module SceneManager
@@ -344,6 +345,9 @@ module SceneManager
     alias m5_20150211_snapshot_for_background snapshot_for_background
     def snapshot_for_background
       m5_20150211_snapshot_for_background
+      m5_snapshot_for_background
+    end
+    def m5_snapshot_for_background
       @m5_background_bitmap.dispose if @m5_background_bitmap
       @m5_background_bitmap = Graphics.snap_to_bitmap
     end
