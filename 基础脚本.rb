@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20150129
+$m5script["M5Base"] = $m5script[:M5Base] = 20150211
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -330,6 +330,23 @@ module M5script
   def self.open_url(addr)
     api = Win32API.new('shell32.dll','ShellExecuteA','pppppi','i')
     api.call(0,'open',addr,0, 0, 1)
+  end
+end
+#--------------------------------------------------------------------------
+# ● 获取未模糊的场景截图
+#
+#     SceneManager.m5_background_bitmap
+#--------------------------------------------------------------------------
+module SceneManager
+  @m5_background_bitmap = nil
+  class << self
+    attr_reader :m5_background_bitmap
+    alias m5_20150211_snapshot_for_background snapshot_for_background
+    def snapshot_for_background
+      m5_20150211_snapshot_for_background
+      @m5_background_bitmap.dispose if @m5_background_bitmap
+      @m5_background_bitmap = Graphics.snap_to_bitmap
+    end
   end
 end
 =begin
