@@ -7,15 +7,11 @@
 
   在菜单选项中添加指定选项，选择该选项即可使用特定的物品
 
-
-  配合物品使用效果中的“公共事件”以及我的隐藏物品脚本，
-
-  （http://rm.66rpg.com/home.php?mod=space&uid=291206&do=blog&id=11860）
-
-  可以很简单的实现各种各样的效果（例如：通过菜单与队友进行对话）
+  配合物品使用效果中的“公共事件”以及其他脚本，
+  可以很简单的实现添加可执行公共事件的菜单选项的效果
 
 =end
-$m5script ||= {};$m5script[:M5IM20150215] = 20150215
+$m5script ||= {};$m5script[:M5IM20150215] = 20150216
 module M5IM20150215; LIST = [
 #==============================================================================
 # 设定部分
@@ -52,18 +48,17 @@ module M5IM20150215; LIST = [
     def play_se_for_item; Sound.play_use_item; end
     def show_sub_window(window)
       super(window)
-      @status_window.hide
+      @status_window.hide if @status_window
     end
     def hide_sub_window(window)
       super(window)
       @item_window.height = @item_window.window_height
       @item_window.create_contents
       @item_window.refresh
-      @status_window.show.refresh
+      @status_window.show.refresh if @status_window
     end
     def use_item
       super
-      $game_party.last_item.object = item
       on_actor_cancel
     end
   end
@@ -93,7 +88,7 @@ class Scene_Menu
       if !respond_to?(name)
         self.class.class_eval("
         define_method name do
-          @m520150215SA.item_id = #{item[1]}
+          @m520150215SA.item_id = item[1]
           @m520150215SA.determine_item
         end")
       end
