@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150129;M5script.version(20150129)
+$m5script[:M5Var20140815] = 20150217;M5script.version(20150211)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -32,6 +32,8 @@ module M5Var20140815;VAR_CONFIG =[
   Y        窗口左上角的Y坐标
   X2       窗口右下角的X坐标
   Y2       窗口右下角的Y坐标
+  Z        窗口的Z高度，可以为负数
+           高度比较大的窗口将遮住高度比较低的窗口
   HINT1    在变量的数值前面显示的提示文字（前后要加双引号）
   HINT2    在变量的数值后面显示的提示文字（前后要加双引号）
   POSX     窗口文字的起始X坐标
@@ -106,7 +108,7 @@ class Window_Var < Window_Base
     @size_window = cal
     super(0,0,0,0)
     self.arrows_visible = false
-    self.z = Z
+    self.z = Z + @config[:Z]
     self.openness = 0
     create_back_sprite
     update
@@ -122,6 +124,7 @@ class Window_Var < Window_Base
     @config[:HINT2] ||= ""
     @config[:POSX] ||= 0
     @config[:POSY] ||= 0
+    @config[:Z] ||= 0
   end
   #--------------------------------------------------------------------------
   # ● 显示窗口的背景
