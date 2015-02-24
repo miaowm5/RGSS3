@@ -6,7 +6,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20150211
+$m5script["M5Base"] = $m5script[:M5Base] = 20150224
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -25,25 +25,28 @@ end
 #
 #     text     : 文本内容(string)
 #     note     : 需要匹配的文字(string)
-#     default  : 缺省值
+#     default  : 缺省值(nil)
 #     value    : 匹配文字是否需要包含结果(true/false)
-#     list     : 是否返回全部匹配结果的数组(true/false)
+#     list     : 是否返回全部匹配结果的数组(false/true)
 #--------------------------------------------------------------------------
 module M5script
-  def self.match_text(text, note, default, value, list)
+  def self.match_text(text, note, default, value, list, &block)
     return list ? [default] : default if text.empty?
     all_result = []
     text.each_line do |line|
       line.chomp!
       if value
         result = /^\s*<\s*#{note}\s+(\S+)\s*>\s*$/ =~ line ? $1 : nil
+        next unless result
+        yield(result) if block_given?
+        return result unless list
+        all_result.push result
       else
-        result = /^\s*<\s*#{note}\s*>\s*$/ =~ line ? true : nil
+        return true if /^\s*<\s*#{note}\s*>\s*$/ =~ line
       end
-      all_result.push result if result
     end
-    all_result.push default if all_result.size == 0
-    return list ? all_result : all_result[0]
+    all_result.push default if all_result.empty?
+    return list ? ( value ? all_result : false ) : default
   end
 end
 #--------------------------------------------------------------------------
@@ -52,8 +55,8 @@ end
 #     m5note(note, default, value, list)
 #--------------------------------------------------------------------------
 class RPG::BaseItem
-  def m5note(note, default = nil, value = true, list = false)
-    M5script.match_text(@note, note, default, value, list)
+  def m5note(note, default = nil, value = true, list = false, &block)
+    M5script.match_text(@note, note, default, value, list, &block)
   end
 end
 #--------------------------------------------------------------------------
@@ -62,7 +65,8 @@ end
 #     M5script.read_event_note(map, id, note, default, value, list)
 #--------------------------------------------------------------------------
 module M5script
-  def self.read_event_note(map,id,note,default = nil,value = true,list = false)
+  def self.read_event_note(map, id, note, default = nil, value = true,
+      list = false, &block)
     begin
       if map == $game_map.map_id then page = $game_map.events[id]
       else
@@ -80,7 +84,7 @@ module M5script
       break if command.code != 108 && command.code != 408
       text += command.parameters[0] + "\n"
     end
-    M5script.match_text(text, note, default, value, list)
+    M5script.match_text(text, note, default, value, list, &block)
   end
 end
 #--------------------------------------------------------------------------
@@ -89,9 +93,10 @@ end
 #     M5script.read_map_note(map, note, default, value, list)
 #--------------------------------------------------------------------------
 module M5script
-  def self.read_map_note(map,note,default = nil,value = true,list = false)
+  def self.read_map_note(map, note, default = nil, value = true,
+      list = false, &block)
     text = load_data(sprintf("Data/Map%03d.rvdata2", map)).note
-    M5script.match_text(text, note, default, value, list)
+    M5script.match_text(text, note, default, value, list, &block)
   end
 end
 #--------------------------------------------------------------------------
