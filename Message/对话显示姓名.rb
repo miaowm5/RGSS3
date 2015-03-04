@@ -13,7 +13,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Name20141004] = 20141208;M5script.version(20141208)
+$m5script[:M5Name20141004] = 20150304;M5script.version(20141208)
 module M5Name20141004
 #==============================================================================
 #  设定部分
@@ -80,15 +80,15 @@ end
 class Window_Message
   alias m5_20141004_convert_escape_characters convert_escape_characters
   def convert_escape_characters *arg
-    @m5_name = nil
+    @m5_name_20150304 = nil
     result = m5_20141004_convert_escape_characters *arg
-    result.gsub!(/\eNAME\[(.+)\]/i) { @m5_name = $1; "" }
+    result.gsub!(/\eNAME\[(.+?)\]/i) { @m5_name_20150304 = $1; "" }
     result
   end
   alias m5_20141004_draw_face draw_face
   def draw_face *arg
-    if @m5_name
-      temp_font = contents.font.m5_return_all_setting      
+    if @m5_name_20150304
+      temp_font = contents.font.m5_return_all_setting
       contents.font.name = M5Name20141004::FONT
       contents.font.size = M5Name20141004::SIZE
       contents.font.color = M5Name20141004::COLOR
@@ -97,14 +97,14 @@ class Window_Message
       contents.font.italic = M5Name20141004::SET[1]
       contents.font.shadow = M5Name20141004::SET[2]
       contents.font.outline = M5Name20141004::SET[3]
-      name_height = text_size(@m5_name).height
+      name_height = text_size(@m5_name_20150304).height
       m5_20141004_draw_back(name_height)
       draw_text([new_line_x + M5Name20141004::NAME_X,0].max,
         M5Name20141004::NAME_Y,self.width - new_line_x,
-        name_height +[M5Name20141004::NAME_Y,0].max,@m5_name,
-        M5Name20141004::ALIGN)      
-      contents.font.m5_set_all_setting(temp_font)      
-      @m5_name = name_height
+        name_height +[M5Name20141004::NAME_Y,0].max,@m5_name_20150304,
+        M5Name20141004::ALIGN)
+      contents.font.m5_set_all_setting(temp_font)
+      @m5_name_20150304 = name_height
     end
     m5_20141004_draw_face *arg
   end
@@ -117,8 +117,8 @@ class Window_Message
   alias m5_20141004_new_page new_page
   def new_page(text, pos)
     m5_20141004_new_page(text, pos)
-    if @m5_name
-      pos[:y] += @m5_name + M5Name20141004::DISTANCE
+    if @m5_name_20150304
+      pos[:y] += @m5_name_20150304 + M5Name20141004::DISTANCE
     end
   end
 end
