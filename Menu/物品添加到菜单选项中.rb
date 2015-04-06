@@ -11,7 +11,7 @@
   可以很简单的实现添加可执行公共事件的菜单选项的效果
 
 =end
-$m5script ||= {};$m5script[:M5IM20150215] = 20150216
+$m5script ||= {};$m5script[:M5IM20150215] = 20150406
 module M5IM20150215; LIST = [
 #==============================================================================
 # 设定部分
@@ -85,14 +85,11 @@ class Scene_Menu
     @m520150215SA.actor_window.hide.deactivate
     M5IM20150215::LIST.each do |item|
       name = "m520150215im#{item[1]}".to_sym
-      if !respond_to?(name)
-        self.class.class_eval("
-        define_method name do
-          @m520150215SA.item_id = item[1]
-          @m520150215SA.determine_item
-        end")
-      end
-      @command_window.set_handler(name, method(name))
+      proc = Proc.new {
+        @m520150215SA.item_id = item[1]
+        @m520150215SA.determine_item
+      }
+      @command_window.set_handler(name, proc)
     end
   end
   alias m5_20150215_update update
