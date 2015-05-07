@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150217;M5script.version(20150211)
+$m5script[:M5Var20140815] = 20150507;M5script.version(20150224)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -43,8 +43,6 @@ module M5Var20140815;VAR_CONFIG =[
   SY       变量窗口的背景图片Y坐标
   SWI      窗口的开关ID，当对应ID的开关打开时不显示这个窗口
   INVERSE  当设置为 true 时，对应ID的开关打开时才显示这个窗口
-  ONLY     当设置为 true 时，窗口将不显示变量的ID，只显示提示文字
-            （不过变量的ID还是需要设置的）
   EVAL     窗口显示的内容变为代码的返回值，VAR属性将被忽略（需要双引号）
             （※ 如果不懂意思的话请不要设置这个属性）
   SCENE    窗口只在特定的场景才显示，如果不懂意思的话请不要设置这个属性
@@ -70,11 +68,9 @@ module M5Var20140815;VAR_CONFIG =[
   },
 
   {
-  VAR:     1,
   X:       0,
   HINT1:   "这个是不显示变量数值的窗口\n",
   HINT2:   "仅当2号开关打开时才显示",
-  ONLY:    true,
   SWI:     2,
   INVERSE: true,
   },
@@ -112,6 +108,7 @@ class Window_Var < Window_Base
     self.openness = 0
     create_back_sprite
     update
+    refresh if @config[:ONLY]
   end
   #--------------------------------------------------------------------------
   # ● 获取窗口的设置
@@ -148,7 +145,7 @@ class Window_Var < Window_Base
     @background_sprite.opacity = 255 if @background_sprite and \
     @background_sprite.opacity != 255
     open if close?
-    update_content
+    update_content unless @config[:ONLY]
   end
   #--------------------------------------------------------------------------
   # ● 更新窗口的关闭判断
@@ -197,9 +194,11 @@ class Window_Var < Window_Base
   #--------------------------------------------------------------------------
   def refresh
     if @config[:EVAL] then @cont = eval(@config[:EVAL])
-    else @cont = $game_variables[@config[:VAR]]
+    else @cont = $game_variables[@config[:VAR]] rescue 0
     end
-    @word = "#{@config[:HINT1]}#{@config[:ONLY] ? "" : @cont}#{@config[:HINT2]}"
+    if @config[:ONLY] then @word = "#{@config[:HINT1]}#{@config[:HINT2]}"
+    else @word = "#{@config[:HINT1]}#{@cont}#{@config[:HINT2]}"
+    end
     set_size_window
     update_placement
     update_position
@@ -245,6 +244,22 @@ class Window_Var < Window_Base
     @background_sprite.dispose if @background_sprite
   end
 end
+  #--------------------------------------------------------------------------
+  # ● 检查是否是指定场景
+  #--------------------------------------------------------------------------
+  def self.check_scene
+    M5Var20140815::SCENE.each do |scene|
+      return true if SceneManager.scene_is?(scene)
+    end
+    false
+  end
+  #--------------------------------------------------------------------------
+  # ● 检查场景
+  #--------------------------------------------------------------------------
+  def self.need_show(need = nil)
+    return false if need && !SceneManager.scene_is?(need)
+    true
+  end
 end # M5Var20140815
 #--------------------------------------------------------------------------
 # ● Scene_Base
@@ -256,31 +271,20 @@ class Scene_Base
   alias m5_20131103_start start
   def start
     m5_20131103_start
-    return unless m5_20140815_check_scene
+    if !M5Var20140815.check_scene
+      @m5_20140815_var_windows = []; return
+    end
     @m5_20140815_cal_size_window = Window_M5CalText.new
     @m5_20140815_var_windows = Array.new(M5Var20140815::VAR_CONFIG.size) do |i|
       config = M5Var20140815::VAR_CONFIG[i]
       next unless config
-      next unless config[:VAR] || config[:EVAL]
-      next unless m5_20140815_scene_need_show(config[:SCENE])
+      if !(config[:VAR] || config[:EVAL])
+        next unless (config[:HINT1] || config[:HINT2])
+        config[:ONLY] = true
+      end
+      next unless M5Var20140815.need_show(config[:SCENE])
       M5Var20140815::Window_Var.new(config,@m5_20140815_cal_size_window)
     end
-  end
-  #--------------------------------------------------------------------------
-  # ● 检查是否是指定场景
-  #--------------------------------------------------------------------------
-  def m5_20140815_check_scene
-    M5Var20140815::SCENE.each do |scene|
-      return true if SceneManager.scene_is?(scene)
-    end
-    false
-  end
-  #--------------------------------------------------------------------------
-  # ● 检查场景
-  #--------------------------------------------------------------------------
-  def m5_20140815_scene_need_show(need = nil)
-    return false if need && !SceneManager.scene_is?(need)
-    true
   end
   #--------------------------------------------------------------------------
   # ● 更新窗口
@@ -288,7 +292,6 @@ class Scene_Base
   alias m5_20131103_update update
   def update
     m5_20131103_update
-    return unless @m5_20140815_var_windows
     @m5_20140815_var_windows.each {|window| window.update if window}
   end
   #--------------------------------------------------------------------------
@@ -297,7 +300,13 @@ class Scene_Base
   alias m5_20131103_terminate terminate
   def terminate
     m5_20131103_terminate
-    return unless @m5_20140815_var_windows
     @m5_20140815_var_windows.each {|window| window.dispose if window}
+  end
+  #--------------------------------------------------------------------------
+  # ● 与旧版脚本之间的兼容
+  #--------------------------------------------------------------------------
+  def m5_20140815_check_scene
+    msgbox "战斗回合数显示/事件提示脚本已更新，请更新到最新版本" if $TEST
+    M5Var20140815.check_scene
   end
 end

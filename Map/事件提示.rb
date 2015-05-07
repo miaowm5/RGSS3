@@ -16,8 +16,8 @@
 =end
 $m5script ||= {}
 raise("需要喵呜喵5地图显示变量脚本的支持") unless $m5script[:M5Var20140815]
-$m5script[:M5EC20150129] = 20150217
-M5script.version(20150217,"喵呜喵5地图显示变量脚本版本过低",:M5Var20140815)
+$m5script[:M5EC20150129] = 20150507
+M5script.version(20150507,"喵呜喵5地图显示变量脚本版本过低",:M5Var20140815)
 module M5EC20150129
 #==============================================================================
 #  设定部分
@@ -82,9 +82,8 @@ class Scene_Map
   alias m5_20150129_start start
   def start
     m5_20150129_start
-    if !m5_20140815_check_scene
+    if !M5Var20140815.check_scene
       @m5_20140815_cal_size_window = Window_M5CalText.new
-      @m5_20140815_var_windows = []
     end
     config = {
       EVAL: "M5EC20150129.text",
