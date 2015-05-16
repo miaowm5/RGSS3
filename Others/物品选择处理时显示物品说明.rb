@@ -17,6 +17,11 @@ module M5KH201505016
 #  设定部分
 #==============================================================================
 
+  LINE = 1
+
+  # 设置帮助窗口的行数，考虑到默认物品选择窗口的大小，行数仅支持 1 或 2
+  # 懂得脚本的话，可以在脚本第85行进行修改以突破这个限制
+
   POS2 = :mode0
 
   # 当不存在对话框或者对话框位置在画面下方时，帮助窗口的显示位置
@@ -77,7 +82,8 @@ class Window_KeyItem
   def initialize *ars
     m5_20150501_initialize *ars
     @m5_20150501_origin_height = self.height
-    (@help_window = Window_Help.new(1)).openness = 0
+    @help_window = Window_Help.new([[1,M5KH201505016::LINE].max,2].min)
+    @help_window.openness = 0
   end
   alias m5_20150501_update update
   def update; m5_20150501_update; @help_window.update; end
