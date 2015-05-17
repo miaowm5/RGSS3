@@ -16,8 +16,8 @@
 =end
 $m5script ||= {}
 raise("需要喵呜喵5地图显示变量脚本的支持") unless $m5script[:M5Var20140815]
-$m5script[:M5EC20150129] = 20150507
-M5script.version(20150507,"喵呜喵5地图显示变量脚本版本过低",:M5Var20140815)
+$m5script[:M5EC20150129] = 20150517
+M5script.version(20150517,"喵呜喵5地图显示变量脚本版本过低",:M5Var20140815)
 module M5EC20150129
 #==============================================================================
 #  设定部分
@@ -55,11 +55,11 @@ module M5EC20150129
 
   # 设置窗口的背景图片，不需要则填入nil。背景图片素材放到 Graphics\System 目录下
 
-  BACK_X = 0
+  SX = 0
 
   # 设置背景图片的X坐标
 
-  BACK_Y = 0
+  SY = 0
 
   # 设置背景图片的Y坐标
 
@@ -78,28 +78,4 @@ module M5EC20150129
     return M5script.read_event_note($game_map.map_id, event.id, "提示","")
   end
 end
-class Scene_Map
-  alias m5_20150129_start start
-  def start
-    m5_20150129_start
-    if !M5Var20140815.check_scene
-      @m5_20140815_cal_size_window = Window_M5CalText.new
-    end
-    config = {
-      EVAL: "M5EC20150129.text",
-      X: M5EC20150129::X,
-      Y: M5EC20150129::Y,
-      X2: M5EC20150129::X2,
-      Y2: M5EC20150129::Y2,
-      BACK: M5EC20150129::BACK,
-      SX: M5EC20150129::BACK_X,
-      SY: M5EC20150129::BACK_Y,
-      SWI: M5EC20150129::SWI,
-      POSX: M5EC20150129::POSX,
-      POSY: M5EC20150129::POSY,
-      Z: M5EC20150129::Z,
-    }
-    window = M5Var20140815::Window_Var.new(config,@m5_20140815_cal_size_window)
-    @m5_20140815_var_windows.push window
-  end
-end
+class Scene_Map; m5_20150517_window(M5EC20150129); end
