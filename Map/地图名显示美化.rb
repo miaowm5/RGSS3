@@ -21,7 +21,7 @@
   来为某张地图单独设置特定的背景图片（文件同样放在 Graphics\System 下）
 
 =end
-$m5script ||= {}; $m5script[:M5MN20150508] = 20150508
+$m5script ||= {}; $m5script[:M5MN20150508] = 20150517
 module M5MN20150508
 #==============================================================================
 #  设定部分
@@ -156,11 +156,14 @@ class Window_MapName < Window_Base
   # ● 更新显示模式
   #--------------------------------------------------------------------------
   def update_mode_setting
-    if OPTION != 0
-      mode = $game_variables[OPTION]
-      mode = nil unless mode.between?(1,3)
+    if !$game_map.name_display then mode = 1
+    else
+      if OPTION != 0
+        mode = $game_variables[OPTION]
+        mode = nil unless mode.between?(1,3)
+      end
+      mode ||= DEAFUT
     end
-    mode ||= DEAFUT
     if @mode != mode
       @state = :disappear if mode == 1
       refresh if @state == :ready
@@ -222,9 +225,9 @@ class Window_MapName < Window_Base
   #--------------------------------------------------------------------------
   def open
     refresh
-    @state = :coming
     self.x = Graphics.width
     self.class.show_end = false
+    @mode = nil
     self
   end
   #--------------------------------------------------------------------------
