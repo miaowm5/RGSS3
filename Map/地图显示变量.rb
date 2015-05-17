@@ -277,6 +277,7 @@ class Scene_Base
   alias m5_20131103_update update
   def update
     m5_20131103_update
+    return if scene_changing?
     @m5_20140815_var_windows.each {|window| window.update if window}
   end
   #--------------------------------------------------------------------------
