@@ -260,12 +260,11 @@ class Scene_Base
     @m5_20140815_var_windows = []
     (M5Var20140815::VAR_CONFIG + self.class.m5_20150517_window).each do |config|
       next unless config
+      next unless self.class == (config[:SCENE] ? config[:SCENE] : Scene_Map)
       if !(config[:VAR] || config[:EVAL])
         next unless (config[:HINT1] || config[:HINT2])
         config[:ONLY] = true
       end
-      scene = config[:SCENE]
-      next unless SceneManager.scene_is?(scene ? scene : Scene_Map)
       @m5_20140815_var_windows.push(
         M5Var20140815::Window_Var.new(config,@m5_20140815_cal_size_window) )
     end
