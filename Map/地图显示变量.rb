@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150517;M5script.version(20150224)
+$m5script[:M5Var20140815] = 20150519;M5script.version(20150224)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -295,7 +295,7 @@ class Scene_Base
     @m5_20150517_add_window ||= []
     return @m5_20150517_add_window unless config
     hash = { EVAL: "#{config}.text", SCENE: self }
-    [:X, :Y, :X2, :Y2, :Z, :BACK, :SY, :SY, :POSX, :POSY, :SWI].each do |key|
+    [:X, :Y, :X2, :Y2, :Z, :BACK, :SX, :SY, :POSX, :POSY, :SWI].each do |key|
       hash[key] = config.const_get(key) rescue nil
     end
     @m5_20150517_add_window.push hash
