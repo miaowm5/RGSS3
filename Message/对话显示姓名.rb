@@ -11,21 +11,28 @@
 
   可以在对话中显示姓名
 
+  （ \name[姓名] 的后面不需要换行，另外，请注意对话框高度太小时系统会强制翻页）
+
 =end
-$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Name20141004] = 20150304;M5script.version(20141208)
+$m5script ||= {};$m5script[:M5Name20141004] = 20150627
 module M5Name20141004
 #==============================================================================
 #  设定部分
 #==============================================================================
 
-  FONT = "黑体"
+  FONT = ["黑体"]
 
   # 姓名所使用的字体
 
-  SIZE = 20
+  SIZE = 18
 
   # 姓名字体的大小
+
+  VOCAB = "【%s】："
+
+  # 姓名的显示方式，%s 表示姓名的文字，
+  # 例如，默认的设置下，“\name[埃里克]”将在游戏中显示为“【埃里克】：”
+  # 不需要的话，直接填写一个 %s 就好
 
   COLOR = Color.new(0,0,0,255)
 
@@ -44,11 +51,11 @@ module M5Name20141004
 
   # 姓名的对齐方式，0，1，2分别是居左、居中、居右
 
-  NAME_X = - 10
+  NAME_X = 0
 
   # 姓名的X坐标，数值越大姓名位置越靠近屏幕右侧
 
-  NAME_Y = 2
+  NAME_Y = 3
 
   # 姓名的Y坐标，数值越大姓名位置越靠近屏幕底部
 
@@ -60,7 +67,7 @@ module M5Name20141004
 
   # 姓名背景的Y坐标，数值越大姓名位置越靠近屏幕底部
 
-  BACK_HEIGHT = 5
+  BACK_HEIGHT = 6
 
   # 姓名背景的高度，数字越大高度越大
 
@@ -88,37 +95,37 @@ class Window_Message
   alias m5_20141004_draw_face draw_face
   def draw_face *arg
     if @m5_name_20150304
-      temp_font = contents.font.m5_return_all_setting
-      contents.font.name = M5Name20141004::FONT
-      contents.font.size = M5Name20141004::SIZE
-      contents.font.color = M5Name20141004::COLOR
-      contents.font.out_color = M5Name20141004::OUT_COLOR
-      contents.font.bold = M5Name20141004::SET[0]
-      contents.font.italic = M5Name20141004::SET[1]
-      contents.font.shadow = M5Name20141004::SET[2]
-      contents.font.outline = M5Name20141004::SET[3]
-      name_height = text_size(@m5_name_20150304).height
-      m5_20141004_draw_back(name_height)
-      draw_text([new_line_x + M5Name20141004::NAME_X,0].max,
-        M5Name20141004::NAME_Y,self.width - new_line_x,
-        name_height +[M5Name20141004::NAME_Y,0].max,@m5_name_20150304,
-        M5Name20141004::ALIGN)
-      contents.font.m5_set_all_setting(temp_font)
+      set = M5Name20141004
+
+      temp = Bitmap.new(self.width, self.height)
+      temp.font.name = set::FONT
+      temp.font.size = set::SIZE
+      temp.font.color = set::COLOR
+      temp.font.out_color = set::OUT_COLOR
+      temp.font.bold = set::SET[0]
+      temp.font.italic = set::SET[1]
+      temp.font.shadow = set::SET[2]
+      temp.font.outline = set::SET[3]
+
+      @m5_name_20150304 = sprintf(set::VOCAB, @m5_name_20150304)
+      name_height = temp.text_size(@m5_name_20150304).height
+      temp.draw_text(0, 0, temp.width - new_line_x, name_height,
+        @m5_name_20150304, set::ALIGN)
+      contents.gradient_fill_rect(0, set::BACK_Y,
+        self.width, name_height + set::BACK_HEIGHT, set::COLOR1, set::COLOR2)
+      contents.blt(new_line_x + set::NAME_X, set::NAME_Y, temp, temp.rect)
+
+      temp.dispose
       @m5_name_20150304 = name_height
     end
     m5_20141004_draw_face *arg
-  end
-  def m5_20141004_draw_back(height)
-    rect = Rect.new(0, M5Name20141004::BACK_Y, self.width,
-      height + M5Name20141004::BACK_HEIGHT)
-    contents.gradient_fill_rect(rect,
-      M5Name20141004::COLOR1, M5Name20141004::COLOR2)
   end
   alias m5_20141004_new_page new_page
   def new_page(text, pos)
     m5_20141004_new_page(text, pos)
     if @m5_name_20150304
       pos[:y] += @m5_name_20150304 + M5Name20141004::DISTANCE
+      @m5_name_20150304 = nil
     end
   end
 end
