@@ -6,14 +6,14 @@
 【说明】
 
   事件指令中相邻的显示选项指令将自动合并成同一个
-  
+
   如果希望相邻的显示选项指令不合并时，在二者之间插入一个任意内容的注释即可
-  
+
   使用这个脚本以后，显示选项指令的“取消的时候 - 分支”这一功能将失效
-  
+
 =end
-$m5script ||= {};$m5script[:M5CE20140927] = 20141109
-class Game_Interpreter  
+$m5script ||= {};$m5script[:M5CE20140927] = 20150628
+class Game_Interpreter
   alias m5_20140927_setup setup
   def setup(list, event_id = 0)
     m5_20140927_setup(list, event_id)
@@ -44,8 +44,8 @@ class Game_Interpreter
           index -= 1
         else break
         end
-      end      
-    end    
+      end
+    end
   end
 end
 class Window_Message; attr_reader :position; end
@@ -59,8 +59,10 @@ class Window_ChoiceList
   def fitting_height(line)
     old_height = m5_20141109_fitting_height(line)
     height = Graphics.height
-    height -= @message_window.height if @message_window.open?
-    height -= @message_window.y if @message_window.position == 1
+    if !$m5script[:M5CIM20141206]
+      height -= @message_window.height if @message_window.open?
+      height -= @message_window.y if @message_window.position == 1
+    end
     return [height, old_height].min
-  end  
+  end
 end
