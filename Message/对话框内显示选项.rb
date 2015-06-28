@@ -12,7 +12,7 @@
   文字+选项的总行数超过对话最大允许行数时将在新一页中显示选项
 
 =end
-$m5script ||= {};$m5script[:M5CIM20141206] = 20141206
+$m5script ||= {};$m5script[:M5CIM20141206] = 20150628
 class Window_Message
   attr_reader :m5_20141206_cim
   alias m5_20141206_process_character process_character
@@ -22,20 +22,16 @@ class Window_Message
   end
 end
 class Window_ChoiceList
-  alias m5_20141206_initialize initialize
-  def initialize(message_window)
-    m5_20141206_initialize(message_window)
-    self.z = 201
-  end
   def update_placement
     pos = @message_window.m5_20141206_cim.clone
     self.height = fitting_height($game_message.choices.size)
     self.opacity = 255
+    self.z = @message_window.z + 1
     self.width = Graphics.width
     if pos[:y] + self.height > @message_window.height && @message_window.open?
       @message_window.input_pause
       @message_window.close
-      self.y = @message_window.y
+      self.y = [@message_window.y, Graphics.height - self.height].min
     elsif @message_window.open?
       self.width -= @message_window.new_line_x
       self.opacity = 0
