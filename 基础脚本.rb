@@ -14,7 +14,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20150224
+$m5script["M5Base"] = $m5script[:M5Base] = 20150704
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -24,6 +24,12 @@ module M5script
   def self.version(ver,hint = "喵呜喵5基础脚本版本过低！",key = :M5Base, h2="")
     version = $m5script[key.to_sym] || $m5script[key.to_s] || raise(h2)
     raise(hint) if (ver > version)
+  end
+  def self.show_error_message(pos="")
+    msgbox "当你看到这行信息时，说明您使用的某个喵呜喵5的#{pos}脚本版本太久了"
+    msgbox "请检查会导致这个错误的脚本，并及时更新脚本"
+    msgbox "如果问题仍然存在，请在对应脚本的下方留言回复"
+    exit
   end
 end
 #--------------------------------------------------------------------------
@@ -240,51 +246,57 @@ end
 #     cal_all_text_height(text) 计算总高度
 #     cal_all_text_width(text)  计算最大宽度
 #     calc_line_width(text)     计算单行宽度
-#     font_width                设置字体的宽度
-#     font_height               设置字体的高度
+#     m5_contents               要描绘目标文字的contents
 #     line_height               设置每行文字的高度
 #--------------------------------------------------------------------------
 class Window_M5CalText < Window_Base
-  include M5script::M5_Window_FontSize
-  attr_writer :font_width, :font_height, :line_height
+  attr_writer :line_height, :m5_contents
   def initialize
     super(0, 0, Graphics.width, Graphics.height)
     self.visible = false
     @text = ""
-    @font_width = nil
-    @font_height = nil
     @line_height = nil
+    @m5_contents = nil
   end
-  def m5_font_width;@font_width;end
-  def m5_font_height;@font_height;end
   def line_height
     return @line_height if @line_height
-    return @font_height if @font_height
     super
   end
+  def initialize_contents
+    if @m5_contents
+      self.contents.dispose
+      self.contents = @m5_contents.clone
+    end
+  end
   def cal_all_text_height(text)
+    initialize_contents
     reset_font_settings
     @text = text.clone
     all_text_height = 1
     convert_escape_characters(@text).each_line do |line|
       all_text_height += calc_line_height(line, false)
     end
+    @m5_contents = nil
     return all_text_height
   end
   def cal_all_text_width(text)
+    initialize_contents
     reset_font_settings
     @text = text.clone
     all_text_width = 1
     convert_escape_characters(@text).each_line do |line|
-      all_text_width = [all_text_width,calc_line_width(line)].max
+      all_text_width = [all_text_width,calc_line_width(line,false)].max
     end
+    @m5_contents = nil
     return all_text_width
   end
-  def calc_line_width(target)
+  def calc_line_width(target, need_refresh = true)
+    initialize_contents if need_refresh
     reset_font_settings
     text = target.clone
     pos = {:x => 0, :y => 0, :new_x => 0, :height => Graphics.height}
     process_character(text.slice!(0, 1), text, pos) until text.empty?
+    @m5_contents = nil if need_refresh
     return pos[:x]
   end
   def process_new_line(text, pos);end
@@ -301,25 +313,6 @@ class Window_M5Help < Window_Help
     super(line_number)
     self.x, self.y ,self.width, self.height = x, y, width, height
     create_contents
-  end
-end
-#--------------------------------------------------------------------------
-# ● 字体的设置
-#
-#     m5_return_all_setting   返回字体设置数组
-#     m5_set_all_setting(set) 一次性设置字体的全部属性
-#--------------------------------------------------------------------------
-class Font
-  def m5_return_all_setting
-    set = [self.name,self.size,self.bold,self.italic,self.outline,self.shadow,
-      "Color.new#{self.color}","Color.new#{self.out_color}"]
-    return set
-  end
-  def m5_set_all_setting(set)
-    list = %w[self.size self.bold self.italic self.outline
-      self.shadow self.color self.out_color]
-    list.reverse!.each {|var| eval("#{var}=#{set.pop}") }
-    self.name = set.pop
   end
 end
 #--------------------------------------------------------------------------
@@ -365,4 +358,15 @@ module SceneManager
       @m5_background_bitmap = Graphics.snap_to_bitmap
     end
   end
+end
+#--------------------------------------------------------------------------
+# ● 被删除的旧版方法
+#--------------------------------------------------------------------------
+class Font
+  def m5_return_all_setting; M5script.show_error_message("文字/字体"); end
+  def m5_set_all_setting(set); M5script.show_error_message("文字/字体"); end
+end
+class Window_M5CalText
+  def font_width; M5script.show_error_message("对话/信息显示"); end
+  def font_height; M5script.show_error_message("对话/信息显示"); end
 end

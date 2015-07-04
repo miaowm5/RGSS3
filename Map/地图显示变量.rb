@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150519;M5script.version(20150224)
+$m5script[:M5Var20140815] = 20150704;M5script.version(20150704)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -96,7 +96,10 @@ module M5Var20140815;VAR_CONFIG =[
 #==============================================================================
 #  设定结束
 #==============================================================================
-class Window_Var < Window_Base
+#--------------------------------------------------------------------------
+# ● Window_VarBase
+#--------------------------------------------------------------------------
+class Window_VarBase < Window_Base
   #--------------------------------------------------------------------------
   # ● 开始处理
   #--------------------------------------------------------------------------
@@ -108,8 +111,6 @@ class Window_Var < Window_Base
     self.z = Z + @config[:Z]
     self.openness = 0
     create_back_sprite
-    update
-    refresh if @config[:ONLY]
   end
   #--------------------------------------------------------------------------
   # ● 获取窗口的设置
@@ -118,10 +119,6 @@ class Window_Var < Window_Base
     @config = config.clone
     @config[:SX] ||= 0
     @config[:SY] ||= 0
-    @config[:HINT1] ||= ""
-    @config[:HINT2] ||= ""
-    @config[:POSX] ||= 0
-    @config[:POSY] ||= 0
     @config[:Z] ||= 0
   end
   #--------------------------------------------------------------------------
@@ -136,6 +133,69 @@ class Window_Var < Window_Base
     @background_sprite.x, @background_sprite.y = @config[:SX], @config[:SY]
     @background_sprite.z = self.z - 1
     @background_sprite.bitmap = bitmap
+  end
+  #--------------------------------------------------------------------------
+  # ● 更新窗口大小
+  #--------------------------------------------------------------------------
+  def update_placement
+    if @config[:X] && @config[:X2]
+      self.width = (@config[:X2] - @config[:X]).abs
+    else
+      @size_window.m5_contents = self.contents
+      self.width  = @size_window.cal_all_text_width(@word)
+      self.width += standard_padding * 2
+    end
+    if @config[:Y] && @config[:Y2]
+      self.height = (@config[:Y2] - @config[:Y]).abs
+    else
+      @size_window.m5_contents = self.contents
+      self.height = @size_window.cal_all_text_height(@word)
+      self.height += standard_padding * 2
+    end
+    create_contents
+  end
+  #--------------------------------------------------------------------------
+  # ● 更新窗口位置
+  #--------------------------------------------------------------------------
+  def update_position
+    if    @config[:X]  then self.x = @config[:X]
+    elsif @config[:X2] then self.x = @config[:X2] - self.width
+    else                    self.x = 0
+    end
+    if    @config[:Y]  then self.y = @config[:Y]
+    elsif @config[:Y2] then self.y = @config[:Y2] - self.height
+    else                    self.y = 0
+    end
+  end
+  #--------------------------------------------------------------------------
+  # ● 释放窗口
+  #--------------------------------------------------------------------------
+  def dispose
+    super
+    @background_sprite.dispose if @background_sprite
+  end
+end
+#--------------------------------------------------------------------------
+# ● Window_Var
+#--------------------------------------------------------------------------
+class Window_Var < Window_VarBase
+  #--------------------------------------------------------------------------
+  # ● 开始处理
+  #--------------------------------------------------------------------------
+  def initialize(config,cal)
+    super(config,cal)
+    update
+    refresh if @config[:ONLY]
+  end
+  #--------------------------------------------------------------------------
+  # ● 获取窗口的设置
+  #--------------------------------------------------------------------------
+  def get_config(config)
+    super(config)
+    @config[:HINT1] ||= ""
+    @config[:HINT2] ||= ""
+    @config[:POSX] ||= 0
+    @config[:POSY] ||= 0
   end
   #--------------------------------------------------------------------------
   # ● 更新
@@ -182,15 +242,6 @@ class Window_Var < Window_Base
     end
   end
   #--------------------------------------------------------------------------
-  # ● 设置计算文字大小的窗口
-  #--------------------------------------------------------------------------
-  def set_size_window
-    size = text_size("口")
-    @size_window.font_width = size.width
-    @size_window.font_height = size.height
-    @size_window.line_height = [line_height, contents.font.size].max
-  end
-  #--------------------------------------------------------------------------
   # ● 描绘文字
   #--------------------------------------------------------------------------
   def refresh
@@ -200,49 +251,10 @@ class Window_Var < Window_Base
     if @config[:ONLY] then @word = "#{@config[:HINT1]}#{@config[:HINT2]}"
     else @word = "#{@config[:HINT1]}#{@cont}#{@config[:HINT2]}"
     end
-    set_size_window
     update_placement
     update_position
     contents.clear
     draw_text_ex(@config[:POSX], @config[:POSY], @word)
-  end
-  #--------------------------------------------------------------------------
-  # ● 更新窗口大小
-  #--------------------------------------------------------------------------
-  def update_placement
-    if @config[:X] && @config[:X2]
-      self.width = (@config[:X2] - @config[:X]).abs
-    else
-      self.width  = @size_window.cal_all_text_width(@word)
-      self.width += standard_padding * 2
-    end
-    if @config[:Y] && @config[:Y2]
-      self.height = (@config[:Y2] - @config[:Y]).abs
-    else
-      self.height = @size_window.cal_all_text_height(@word)
-      self.height += standard_padding * 2
-    end
-    create_contents
-  end
-  #--------------------------------------------------------------------------
-  # ● 更新窗口位置
-  #--------------------------------------------------------------------------
-  def update_position
-    if    @config[:X]  then self.x = @config[:X]
-    elsif @config[:X2] then self.x = @config[:X2] - self.width
-    else                    self.x = 0
-    end
-    if    @config[:Y]  then self.y = @config[:Y]
-    elsif @config[:Y2] then self.y = @config[:Y2] - self.height
-    else                    self.y = 0
-    end
-  end
-  #--------------------------------------------------------------------------
-  # ● 释放窗口
-  #--------------------------------------------------------------------------
-  def dispose
-    super
-    @background_sprite.dispose if @background_sprite
   end
 end
 end # M5Var20140815
@@ -298,17 +310,5 @@ class Scene_Base
       hash[key] = config.const_get(key) rescue nil
     end
     @m5_20150517_add_window.push hash
-  end
-end
-#--------------------------------------------------------------------------
-# ● 与旧版脚本的兼容
-#--------------------------------------------------------------------------
-class Scene_Base
-  def m5_20140815_check_scene; M5Var20140815.check_scene; end
-end
-module M5Var20140815
-  def self.check_scene
-    msgbox "战斗回合数显示/事件提示脚本已更新，请更新到最新版本" if $TEST
-    return true
   end
 end
