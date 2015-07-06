@@ -39,6 +39,10 @@ module M5Combin20141204;module Tool2
 
   # 帮助窗口高度
 
+  FONT = 20
+
+  # 帮助窗口字体的大小
+
 #==============================================================================
 #  设定结束
 #==============================================================================
@@ -54,6 +58,7 @@ class Window_Help
     self.x, self.y = Tool2::X, Tool2::Y
     self.width, self.height = Tool2::WIDTH, Tool2::HEIGHT
     create_contents
+    contents.font.size = Tool2::FONT
   end
 end
 end

@@ -1,6 +1,6 @@
 =begin
 
-Source：http://himeworks.com/2013/03/scene-interpreter/
+原地址：http://himeworks.com/2013/03/scene-interpreter/
 
 #===============================================================================
  Title: Scene Interpreter

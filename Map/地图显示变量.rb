@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150704;M5script.version(20150704)
+$m5script[:M5Var20140815] = 20150706;M5script.version(20150706)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -96,94 +96,13 @@ module M5Var20140815;VAR_CONFIG =[
 #==============================================================================
 #  设定结束
 #==============================================================================
-#--------------------------------------------------------------------------
-# ● Window_VarBase
-#--------------------------------------------------------------------------
-class Window_VarBase < Window_Base
-  #--------------------------------------------------------------------------
-  # ● 开始处理
-  #--------------------------------------------------------------------------
-  def initialize(config,cal)
-    get_config(config)
-    @size_window = cal
-    super(0,0,0,0)
-    self.arrows_visible = false
-    self.z = Z + @config[:Z]
-    self.openness = 0
-    create_back_sprite
-  end
-  #--------------------------------------------------------------------------
-  # ● 获取窗口的设置
-  #--------------------------------------------------------------------------
-  def get_config(config)
-    @config = config.clone
-    @config[:SX] ||= 0
-    @config[:SY] ||= 0
-    @config[:Z] ||= 0
-  end
-  #--------------------------------------------------------------------------
-  # ● 显示窗口的背景
-  #--------------------------------------------------------------------------
-  def create_back_sprite
-    return unless @config[:BACK]
-    self.opacity = 0
-    bitmap = Cache.system(@config[:BACK]) rescue nil
-    return unless bitmap
-    @background_sprite = Sprite.new
-    @background_sprite.x, @background_sprite.y = @config[:SX], @config[:SY]
-    @background_sprite.z = self.z - 1
-    @background_sprite.bitmap = bitmap
-  end
-  #--------------------------------------------------------------------------
-  # ● 更新窗口大小
-  #--------------------------------------------------------------------------
-  def update_placement
-    if @config[:X] && @config[:X2]
-      self.width = (@config[:X2] - @config[:X]).abs
-    else
-      @size_window.m5_contents = self.contents
-      self.width  = @size_window.cal_all_text_width(@word)
-      self.width += standard_padding * 2
-    end
-    if @config[:Y] && @config[:Y2]
-      self.height = (@config[:Y2] - @config[:Y]).abs
-    else
-      @size_window.m5_contents = self.contents
-      self.height = @size_window.cal_all_text_height(@word)
-      self.height += standard_padding * 2
-    end
-    create_contents
-  end
-  #--------------------------------------------------------------------------
-  # ● 更新窗口位置
-  #--------------------------------------------------------------------------
-  def update_position
-    if    @config[:X]  then self.x = @config[:X]
-    elsif @config[:X2] then self.x = @config[:X2] - self.width
-    else                    self.x = 0
-    end
-    if    @config[:Y]  then self.y = @config[:Y]
-    elsif @config[:Y2] then self.y = @config[:Y2] - self.height
-    else                    self.y = 0
-    end
-  end
-  #--------------------------------------------------------------------------
-  # ● 释放窗口
-  #--------------------------------------------------------------------------
-  def dispose
-    super
-    @background_sprite.dispose if @background_sprite
-  end
-end
-#--------------------------------------------------------------------------
-# ● Window_Var
-#--------------------------------------------------------------------------
-class Window_Var < Window_VarBase
+class Window_Var < M5script::Window_Var
   #--------------------------------------------------------------------------
   # ● 开始处理
   #--------------------------------------------------------------------------
   def initialize(config,cal)
     super(config,cal)
+    self.z += Z
     update
     refresh if @config[:ONLY]
   end
@@ -253,7 +172,6 @@ class Window_Var < Window_VarBase
     end
     update_placement
     update_position
-    contents.clear
     draw_text_ex(@config[:POSX], @config[:POSY], @word)
   end
 end
@@ -268,7 +186,7 @@ class Scene_Base
   alias m5_20131103_start start
   def start
     m5_20131103_start
-    @m5_20140815_cal_size_window = Window_M5CalText.new
+    @m5_20140815_cal_size_window = M5script::Window_Cal.new
     @m5_20140815_var_windows = []
     (M5Var20140815::VAR_CONFIG + self.class.m5_20150517_window).each do |config|
       next unless config
