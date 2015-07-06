@@ -12,8 +12,7 @@
   在脚本开头设定完毕后，请去数据库中对应的公共事件里设定合成的配方
 
 =end
-$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Combin20141204] = 20150215;M5script.version(20141205)
+$m5script ||= {}; $m5script[:M5Combin20141204] = 20150706
 module M5Combin20141204
 #==============================================================================
 #  设定部分
@@ -24,8 +23,8 @@ module M5Combin20141204
   # 脚本需要一个变量来临时储存合成的数据，请填写一个没用的并且不会随便被修改的变量ID
 
   HINT =<<HINT
-\\i[4]请选择需要合成的物品，上下键切换，Z键确
-定，X键取消，A键用当前素材开始合成
+\\i[4]请选择需要合成的物品，上下键切换，Z键确定，
+X键取消，A键用当前素材开始合成
 HINT
 
   # 在两个HINT之间设置合成界面的操作提示文字
@@ -46,10 +45,6 @@ HINT
 #  设定结束，接下去请去对应的公共事件中设定合成配方
 #==============================================================================
 class Window_Help < Window_Base
-  include M5script::M5_Window_FontSize
-  def m5_font_width
-    (Graphics.width - standard_padding * 2) / 28
-  end
   def initialize
     super(0, 0, Graphics.width, fitting_height(1))
     set_text(M5Combin20141204::HINT)
@@ -76,13 +71,8 @@ class Window_Help < Window_Base
   end
 end
 class Window_List < Window_Selectable
-  include M5script::M5_Window_FontSize
-  def m5_font_width
-    (Graphics.width - standard_padding * 2) / 30
-  end
   def initialize(material,x,y,w,h)
     super(x,y,w,h)
-    self.arrows_visible = false
     @material = material
     refresh
   end
@@ -115,7 +105,7 @@ class Window_List < Window_Selectable
   end
   def has_note?(item)
     return true unless NOT
-    return item.m5note('COMBIN', false, false)
+    item.note.include?("<COMBIN>")
   end
   def draw_item(index)
     item = @data[index]
@@ -147,6 +137,14 @@ class Window_List < Window_Selectable
     deactivate
     call_handler(:skip)
     Input.update
+  end
+  def activate
+    self.arrows_visible = true
+    super
+  end
+  def deactivate
+    self.arrows_visible = false
+    super
   end
 end
 end # module M5Combin20141204
@@ -220,14 +218,14 @@ class Scene_Combin < Scene_MenuBase
       window.set_handler(:skip,   method(:material_skip))
     end
   end
-  def material_max;2;end
-  def material_min;material_max;end
-  def m_win_x;[0, Graphics.width/2];end
-  def m_win_y;[Graphics.height/2 - 24, Graphics.height/2 - 24];end
-  def m_win_width;[Graphics.width/2, Graphics.width/2];end
-  def m_win_height;[48, 48];end
-  def m_win_skin;["",""];end
-  def m_win_back;[false,false];end
+  def material_max; 2; end
+  def material_min; material_max; end
+  def m_win_x; [0, Graphics.width/2]; end
+  def m_win_y; [Graphics.height/2 - 24, Graphics.height/2 - 24]; end
+  def m_win_width; [Graphics.width/2, Graphics.width/2]; end
+  def m_win_height; [48, 48]; end
+  def m_win_skin; ["",""]; end
+  def m_win_back; [false,false]; end
   def update_all_windows
     super
     @material_windows.each(&:update)

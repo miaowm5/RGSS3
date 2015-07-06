@@ -14,7 +14,7 @@
 #==============================================================================
 
 $m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20150704
+$m5script["M5Base"] = $m5script[:M5Base] = 20150706
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -26,9 +26,9 @@ module M5script
     raise(hint) if (ver > version)
   end
   def self.show_error_message(pos="")
-    msgbox "当你看到这行信息时，说明您使用的某个喵呜喵5的#{pos}脚本版本太久了"
-    msgbox "请检查会导致这个错误的脚本，并及时更新脚本"
-    msgbox "如果问题仍然存在，请在对应脚本的下方留言回复"
+    msgbox "当你看到这行信息时说明您使用的某个喵呜喵5的#{pos}脚本版本太旧了\n" +
+    "请检查会导致这个错误的脚本，并及时更新脚本\n\n" +
+    "如果最新版脚本问题仍然存在，请在对应脚本的下方向我留言回复"
     exit
   end
 end
@@ -170,45 +170,6 @@ class Window_Base
   end
 end
 #--------------------------------------------------------------------------
-# ● 绘制值槽
-#
-#     include M5script::M5_Window_Gauge
-#
-#     m5_draw_gauge(now, max, vocab, color, x, y, width)
-#     color[0]  槽值渐变色
-#     color[1]  槽值渐变色
-#     color[2]  槽值名称颜色
-#     color[3]  槽值当前值颜色
-#     color[4]  槽值最大值颜色
-#--------------------------------------------------------------------------
-module M5script;module M5_Window_Gauge
-  def m5_draw_gauge(now, max, vocab, color, x, y, width = 124)
-    draw_gauge(x, y, width, [now.to_f/max,1].min, color[0], color[1])
-    change_color(color[2])
-    draw_text(x, y, 30, line_height, vocab)
-    draw_current_and_max_values(x, y, width, now, max, color[3], color[4])
-  end
-end;end
-#--------------------------------------------------------------------------
-# ● 绘制图标
-#
-#     include M5script::M5_Window_Icons
-#
-#     m5_draw_icons(icons, x, y, width, col, enabled) 多行描绘图标
-#--------------------------------------------------------------------------
-module M5script;module M5_Window_Icons
-  def m5_draw_icons(icons, x, y, width = 96, col = 1, enabled = [])
-    col.times do |line|
-      temp_icons = icons[width * line / 24, width / 24]
-      return unless temp_icons
-      temp_icons.each_with_index do |icon_index, pos|
-        alpha = enabled[pos + width * line / 24]
-        draw_icon(icon_index, x + 24 * pos, y + 24 * line, !alpha)
-      end
-    end
-  end
-end;end
-#--------------------------------------------------------------------------
 # ● 字体大小调整
 #
 #     include M5script::M5_Window_FontSize
@@ -239,7 +200,7 @@ class Window_Base
   end
 end
 #--------------------------------------------------------------------------
-# ● Window_M5CalText
+# ● M5script::Window_Cal
 #
 #     计算一段文字大小时使用的临时窗口
 #
@@ -249,7 +210,7 @@ end
 #     m5_contents               要描绘目标文字的contents
 #     line_height               设置每行文字的高度
 #--------------------------------------------------------------------------
-class Window_M5CalText < Window_Base
+module M5script; class Window_Cal < Window_Base
   attr_writer :line_height, :m5_contents
   def initialize
     super(0, 0, Graphics.width, Graphics.height)
@@ -301,20 +262,76 @@ class Window_M5CalText < Window_Base
   end
   def process_new_line(text, pos);end
   def draw_text(*args);end
-end
+end; end
 #--------------------------------------------------------------------------
-# ● 可以设置位置、大小的帮助窗口
+# ● 自动计算大小和位置并包含背景的信息显示窗口
 #
-#     Window_M5Help
+#     M5script::Window_Var
+#
+#     cal    计算窗口大小使用的临时窗口，M5script::Window_Cal 的实例
+#     config 窗口设置的哈希表，使用了以下键值：
+#            :X :X2 :Y :Y2 :Z :BACK :SX :SY
 #--------------------------------------------------------------------------
-class Window_M5Help < Window_Help
-  def initialize(line_number = 2, x = 0, y = 0, width = Graphics.width,
-      height = fitting_height(line_number))
-    super(line_number)
-    self.x, self.y ,self.width, self.height = x, y, width, height
+module M5script; class Window_Var < Window_Base
+  def initialize(config, cal = nil)
+    get_config(config)
+    @dispose_flag = true unless cal
+    @size_window = cal || M5script::Window_Cal.new
+    super(0,0,0,0)
+    self.arrows_visible = false
+    self.z = @config[:Z]
+    self.openness = 0
+    create_back_sprite
+  end
+  def get_config(config)
+    @config = config.clone
+    @config[:SX] ||= 0
+    @config[:SY] ||= 0
+    @config[:Z] ||= 0
+  end
+  def create_back_sprite
+    return unless @config[:BACK]
+    self.opacity = 0
+    bitmap = Cache.system(@config[:BACK]) rescue nil
+    return unless bitmap
+    @background_sprite = Sprite.new
+    @background_sprite.x, @background_sprite.y = @config[:SX], @config[:SY]
+    @background_sprite.z = self.z - 1
+    @background_sprite.bitmap = bitmap
+  end
+  def update_placement
+    if @config[:X] && @config[:X2]
+      self.width = (@config[:X2] - @config[:X]).abs
+    else
+      @size_window.m5_contents = self.contents
+      self.width  = @size_window.cal_all_text_width(@word)
+      self.width += standard_padding * 2
+    end
+    if @config[:Y] && @config[:Y2]
+      self.height = (@config[:Y2] - @config[:Y]).abs
+    else
+      @size_window.m5_contents = self.contents
+      self.height = @size_window.cal_all_text_height(@word)
+      self.height += standard_padding * 2
+    end
     create_contents
   end
-end
+  def update_position
+    if    @config[:X]  then self.x = @config[:X]
+    elsif @config[:X2] then self.x = @config[:X2] - self.width
+    else                    self.x = 0
+    end
+    if    @config[:Y]  then self.y = @config[:Y]
+    elsif @config[:Y2] then self.y = @config[:Y2] - self.height
+    else                    self.y = 0
+    end
+  end
+  def dispose
+    super
+    @size_window.dispose if @dispose_flag
+    @background_sprite.dispose if @background_sprite
+  end
+end; end
 #--------------------------------------------------------------------------
 # ● 生成TXT
 #
@@ -367,6 +384,16 @@ class Font
   def m5_set_all_setting(set); M5script.show_error_message("文字/字体"); end
 end
 class Window_M5CalText
-  def font_width; M5script.show_error_message("对话/信息显示"); end
-  def font_height; M5script.show_error_message("对话/信息显示"); end
+  def initialize; M5script.show_error_message("信息显示"); end
+end
+class Window_M5Help
+  def initialize; M5script.show_error_message("信息显示"); end
+end
+module M5script
+  module M5_Window_Gauge
+    def self.included *args; M5script.show_error_message("信息显示"); end
+  end
+  module M5_Window_Icons
+    def self.included *args; M5script.show_error_message("信息显示"); end
+  end
 end
