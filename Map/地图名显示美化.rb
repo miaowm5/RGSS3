@@ -21,7 +21,7 @@
   来为某张地图单独设置特定的背景图片（文件同样放在 Graphics\System 下）
 
 =end
-$m5script ||= {}; $m5script[:M5MN20150508] = 20150517
+$m5script ||= {}; $m5script[:M5MN20150508] = 20150723
 module M5MN20150508
 #==============================================================================
 #  设定部分
@@ -48,7 +48,7 @@ module M5MN20150508
   SIZE = 20
   # 地图名字体的大小
 
-  COLOR = Color.new(0,0,0, 210)
+  COLOR = Color.new(255, 255, 255, 210)
   # 地图名的颜色，四个数值分别是R、G、B以及透明度
 
   BOLD = false
@@ -204,12 +204,10 @@ class Window_MapName < Window_Base
     @state = :ready if @background.opacity <= 0
   end
   #--------------------------------------------------------------------------
-  # ● 描绘窗口内容
+  # ● 设置字体
   #--------------------------------------------------------------------------
-  def refresh
-    contents.clear
-    return if $game_map.display_name == ""
-    creat_background_sprite
+  def reset_font_settings
+    super
     contents.font.name = FONT
     contents.font.size = SIZE
     contents.font.bold = BOLD
@@ -218,6 +216,14 @@ class Window_MapName < Window_Base
     contents.font.shadow = SHADOW
     contents.font.color = COLOR
     contents.font.out_color = OUT_COLOR
+  end
+  #--------------------------------------------------------------------------
+  # ● 描绘窗口内容
+  #--------------------------------------------------------------------------
+  def refresh
+    contents.clear
+    return if $game_map.display_name == ""
+    creat_background_sprite
     draw_text_ex(0,0, $game_map.display_name)
   end
   #--------------------------------------------------------------------------
