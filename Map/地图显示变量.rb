@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150706;M5script.version(20150706)
+$m5script[:M5Var20140815] = 20150723;M5script.version(20150706)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -215,6 +215,7 @@ class Scene_Base
   alias m5_20131103_terminate terminate
   def terminate
     m5_20131103_terminate
+    return unless @m5_20140815_var_windows
     @m5_20140815_var_windows.each {|window| window.dispose if window}
   end
   #--------------------------------------------------------------------------
