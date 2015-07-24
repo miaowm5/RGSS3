@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150723;M5script.version(20150706)
+$m5script[:M5Var20140815] = 20150724;M5script.version(20150706)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -102,7 +102,6 @@ class Window_Var < M5script::Window_Var
   #--------------------------------------------------------------------------
   def initialize(config,cal)
     super(config,cal)
-    self.z += Z
     update
     refresh if @config[:ONLY]
   end
@@ -111,6 +110,7 @@ class Window_Var < M5script::Window_Var
   #--------------------------------------------------------------------------
   def get_config(config)
     super(config)
+    @config[:Z] += Z
     @config[:HINT1] ||= ""
     @config[:HINT2] ||= ""
     @config[:POSX] ||= 0
@@ -207,6 +207,7 @@ class Scene_Base
   def update
     m5_20131103_update
     return if scene_changing?
+    return unless @m5_20140815_var_windows
     @m5_20140815_var_windows.each {|window| window.update if window}
   end
   #--------------------------------------------------------------------------
