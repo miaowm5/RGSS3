@@ -13,7 +13,7 @@
   使用全局变量可以用来制作类似记录通关次数或者进入二周目这样的功能
 
 =end
-$m5script ||= {};$m5script[:M5GV20140811] = 20150320
+$m5script ||= {};$m5script[:M5GV20140811] = 20150802
 $m5script[:ScriptData] ||= {}
 module M5GV20140811
 #==============================================================================
@@ -63,9 +63,9 @@ module M5GV20140811
   end
 end
 class Game_Variables
-  alias m5_20140811_set []=
-  def []=(variable_id, value)
-    m5_20140811_set(variable_id, value)
+  alias m5_20150801_on_change on_change
+  def on_change
+    m5_20150801_on_change
     return unless M5GV20140811::AUTO
     M5GV20140811.save_var if M5GV20140811::VAR.include?(variable_id)
   end
