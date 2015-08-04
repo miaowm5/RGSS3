@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150724;M5script.version(20150706)
+$m5script[:M5Var20140815] = 20150803;M5script.version(20150706)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -43,7 +43,7 @@ module M5Var20140815;VAR_CONFIG =[
   SX       背景图片的X坐标
   SY       背景图片的Y坐标
   SWI      窗口的开关ID，当对应ID的开关打开时不显示这个窗口
-  INVERSE  当设置为 true 时，对应ID的开关打开时才显示这个窗口
+  INV_SWI  窗口的开关ID，当对应ID的开关【关闭】时不显示这个窗口
   EVAL     窗口显示的内容变为代码的返回值，VAR属性将被忽略（需要双引号）
            如果不懂意思的话请不要设置这个属性
   SCENE    窗口只在特定的 Scene 才显示，如果不懂意思的话请不要设置这个属性
@@ -56,9 +56,9 @@ module M5Var20140815;VAR_CONFIG =[
   X2:    544,
   Y2:    416,
   HINT1: "\\i[10]1号变量的值是",
-  HINT2: "的说",
+  HINT2: "的说（打开2号开关试试？）",
   SWI:   2,
-  POSX: 100,
+  POSX: 50,
   },
 
   {
@@ -72,8 +72,7 @@ module M5Var20140815;VAR_CONFIG =[
   X:       0,
   HINT1:   "这个是不显示变量数值的窗口\n",
   HINT2:   "仅当2号开关打开时才显示",
-  SWI:     2,
-  INVERSE: true,
+  INV_SWI:  2,
   },
 
   {
@@ -90,8 +89,12 @@ module M5Var20140815;VAR_CONFIG =[
   SWI = 1   # 对应ID的开关打开时，关闭本脚本的功能，不在地图上显示变量，
             # 这个全局开关优先于各个窗口单独设置的开关
             # 我的其他需要本脚本支持的脚本也会受到这个开关的影响而失效
+            # 如果不需要这个开关的话，这里请填 nil
 
-    SWI_INVERSE = false  # 设置为 true 时，上方对应ID的开关打开时本脚本才生效
+  INV_SWI = nil  # 对应ID的开关【关闭】时，关闭本脚本的功能，不在地图上显示变量，
+                 # 这个全局开关优先于各个窗口单独设置的开关以及上面设置的开关
+                 # 我的其他需要本脚本支持的脚本也会受到这个开关的影响而失效
+                 # 如果不需要这个开关的话，这里请填 nil
 
 #==============================================================================
 #  设定结束
@@ -140,16 +143,13 @@ class Window_Var < M5script::Window_Var
     false
   end
   #--------------------------------------------------------------------------
-  # ● 窗口是否应该关闭?
+  # ● 窗口是否应该关闭? (true:关闭)
   #--------------------------------------------------------------------------
   def close_judge
-    return true if $game_switches[SWI]  && !SWI_INVERSE
-    return true if !$game_switches[SWI] &&  SWI_INVERSE
-    if @config[:SWI]
-      if @config[:INVERSE] then return true if !$game_switches[@config[:SWI]]
-      else return true if $game_switches[@config[:SWI]]
-      end
-    end
+    return true if INV_SWI && !$game_switches[INV_SWI]
+    return true if SWI && $game_switches[SWI]
+    return true if @config[:INV_SWI] && !$game_switches[@config[:INV_SWI]]
+    return true if @config[:SWI] && $game_switches[@config[:SWI]]
     false
   end
   #--------------------------------------------------------------------------
@@ -226,7 +226,8 @@ class Scene_Base
     @m5_20150517_add_window ||= []
     return @m5_20150517_add_window unless config
     hash = { EVAL: "#{config}.text", SCENE: self }
-    [:X, :Y, :X2, :Y2, :Z, :BACK, :SX, :SY, :POSX, :POSY, :SWI].each do |key|
+    [:X, :Y, :X2, :Y2, :Z, :BACK, :SX, :SY, :POSX, :POSY, :SWI,
+      :INV_SWI].each do |key|
       hash[key] = config.const_get(key) rescue nil
     end
     @m5_20150517_add_window.push hash

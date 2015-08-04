@@ -7,22 +7,39 @@
 
   “判断变量的值为1时执行XX事件，值为2时执行XX事件，值为3时执行XX事件...”
   像是这样的内容用默认的事件指令来写时要写好多个分支条件，看着极其不舒服
-  
+
   这个脚本将类似case这样的Ruby语法移植到了事件中，
   使在事件中实现上面的过程变得清晰起来
-  
+
   效果图：
   http://rm.66rpg.com/home.php?mod=space&uid=291206&do=blog&id=13466
-  
+
 =end
 #==============================================================================
 # 脚本部分
 #==============================================================================
-$m5script ||= {};$m5script["M5Case20140617"] = 20140807
+$m5script ||= {};$m5script[:M5Case20140617] = 20150803
 class Game_Interpreter
   #--------------------------------------------------------------------------
+  # ● 储存 Case 数据
+  #--------------------------------------------------------------------------
+  alias m5_20150803_marshal_dump marshal_dump
+  def marshal_dump
+    data = m5_20150803_marshal_dump
+    data.push @m5case
+    data
+  end
+  #--------------------------------------------------------------------------
+  # ● 读取 Case 数据
+  #--------------------------------------------------------------------------
+  alias m5_20150803_marshal_load marshal_load
+  def marshal_load(obj)
+    @m5case = obj.pop
+    m5_20150803_marshal_load(obj)
+  end
+  #--------------------------------------------------------------------------
   # ● 初始化
-  #--------------------------------------------------------------------------  
+  #--------------------------------------------------------------------------
   alias m5_20140617_clear clear
   def clear
     m5_20140617_clear
@@ -64,10 +81,10 @@ class Game_Interpreter
   #--------------------------------------------------------------------------
   alias m5_20140617_command_1082 command_108
   def command_108
-    m5_20140617_command_1082    
-    return unless (@m5case[0] != 0 && @comments[0] =~ (/^\s*when\s+.*?/))    
+    m5_20140617_command_1082
+    return unless (@m5case[0] != 0 && @comments[0] =~ (/^\s*when\s+.*?/))
     comment = @comments[0].clone
-    comment.slice!(/^\s*when\s+.*?/) rescue ""    
+    comment.slice!(/^\s*when\s+.*?/) rescue ""
     return if comment == ""
     变量 = $game_variables
     comment = eval("[#{comment}]")
@@ -86,7 +103,7 @@ class Game_Interpreter
   def command_108
     m5_20140617_command_1084
     return unless (@m5case[0] != 0 && @comments[0] =~ (/^\s*else\s*?/))
-    return (@m5case[@m5case[0]][1] = false) if @m5case[@m5case[0]][2]    
+    return (@m5case[@m5case[0]][1] = false) if @m5case[@m5case[0]][2]
     @m5case[@m5case[0]][1] = true
   end
   #--------------------------------------------------------------------------
@@ -95,7 +112,7 @@ class Game_Interpreter
   alias m5_20140617_command_1083 command_108
   def command_108
     m5_20140617_command_1083
-    return unless (@m5case[0] != 0 && @comments[0] =~ (/^\s*end\s*?/))    
+    return unless (@m5case[0] != 0 && @comments[0] =~ (/^\s*end\s*?/))
     @m5case[0] -= 1
   end
 end
