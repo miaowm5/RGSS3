@@ -12,7 +12,7 @@
   在脚本开头设定完毕后，请去数据库中对应的公共事件里设定合成的配方
 
 =end
-$m5script ||= {}; $m5script[:M5Combin20141204] = 20150706
+$m5script ||= {}; $m5script[:M5Combin20141204] = 20150811
 module M5Combin20141204
 #==============================================================================
 #  设定部分
@@ -131,7 +131,10 @@ class Window_List < Window_Selectable
     return unless open? && active
     return process_ok       if ok_enabled?        && Input.trigger?(:C)
     return process_cancel   if cancel_enabled?    && Input.trigger?(:B)
-    return process_skip     if Input.trigger?(:X)
+    return process_skip     if check_skip
+  end
+  def check_skip
+    return Input.trigger?(:X)
   end
   def process_skip
     deactivate
