@@ -17,7 +17,7 @@
   (在脚本中更改某个设置后需要再次执行该指令更改的设置才会生效)
 
 =end
-$m5script ||= {};$m5script[:M5TC20150320] = 20150320
+$m5script ||= {};$m5script[:M5TC20150320] = 20150824
 raise "需要喵呜喵5全局变量脚本的支持" unless $m5script[:M5GV20140811]
 module M5TC20150320
   SETTING = {
@@ -133,6 +133,7 @@ end
 class Game_Interpreter
   def m5t20150320(name)
     setting = {
+      :setting_name => name,
       :game_title => $data_system.m5_20150320_game_title,
       :opt_draw_title => $data_system.m5_20150320_opt_draw_title,
       :title1_name => $data_system.m5_20150320_title1_name,
