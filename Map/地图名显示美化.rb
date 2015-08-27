@@ -21,7 +21,7 @@
   来为某张地图单独设置特定的背景图片（文件同样放在 Graphics\System 下）
 
 =end
-$m5script ||= {}; $m5script[:M5MN20150508] = 20150723
+$m5script ||= {}; $m5script[:M5MN20150508] = 20150827
 module M5MN20150508
 #==============================================================================
 #  设定部分
@@ -41,6 +41,9 @@ module M5MN20150508
 
   FADE = 40
   # 这里设置地图名进入和离开的时间
+
+  SLIDE = false
+  # 设置为 false 时，关闭地图名的滑动特效
 
   FONT = ["黑体"]
   # 地图名所使用的字体
@@ -194,13 +197,19 @@ class Window_MapName < Window_Base
     @state = :showing
   end
   #--------------------------------------------------------------------------
+  # ● 窗口的初位置
+  #--------------------------------------------------------------------------
+  def origin_position
+    return SLIDE ? Graphics.width : X
+  end
+  #--------------------------------------------------------------------------
   # ● 更新窗口的离开效果
   #--------------------------------------------------------------------------
   def update_leaving
     return unless @mode == 3
     @background.opacity -= ( 255 / FADE )/2
     self.contents_opacity -= 255 / FADE
-    self.x = [self.x + Graphics.width/FADE , Graphics.width].min
+    self.x = [self.x + Graphics.width/FADE , origin_position].min
     @state = :ready if @background.opacity <= 0
   end
   #--------------------------------------------------------------------------
@@ -231,7 +240,7 @@ class Window_MapName < Window_Base
   #--------------------------------------------------------------------------
   def open
     refresh
-    self.x = Graphics.width
+    self.x = origin_position
     self.class.show_end = false
     @mode = nil
     self
@@ -247,7 +256,7 @@ class Window_MapName < Window_Base
   # ● 清除窗口的设置
   #--------------------------------------------------------------------------
   def clear_all_flag
-    self.x = Graphics.width
+    self.x = origin_position
     @state = :ready
     @next_time = 0
     self.contents_opacity = @background.opacity = 0
