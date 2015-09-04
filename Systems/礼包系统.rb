@@ -34,7 +34,7 @@
     现在的系统时间相对于之前是否已经超过了时间长短
 
 =end
-$m5script ||= {};$m5script[:M5TP20150211] = 20150211
+$m5script ||= {};$m5script[:M5TP20150211] = 20150904
 module M5TP20150211
 #==============================================================================
 #  设定部分
@@ -47,21 +47,21 @@ module M5TP20150211
 #==============================================================================
 #  设定结束
 #==============================================================================
-end
-class Game_Interpreter
-  def m5_20150211_get_time
+  def self.get
     v = $game_variables
-    v[M5TP20150211::VAR] = Array.new unless v[M5TP20150211::VAR].is_a?(Array)
-    return v[M5TP20150211::VAR]
+    v[VAR] = v[VAR].is_a?(Array) ? v[VAR] : Array.new
   end
-  def m5_20150211_judge_time(id,type,pass)
-    time = m5_20150211_get_time[id] || m5_save_time(id)
-    reslut = type == 0 ? Time.now - time[0] : $game_system.playtime - time[1]
+  def self.judge(id,type,pass)
+    time = get[id] || save(id)
+    reslut = type ? Time.now - time[0] : $game_system.playtime - time[1]
     return pass ? reslut >= pass.abs : reslut
   end
-  def m5_save_time(id = 1)
-    m5_20150211_get_time[id] = [Time.now, $game_system.playtime]
-  end
-  def sys_time_judge(id = 1, pass = nil); m5_20150211_judge_time(id,0,pass);end
-  def ply_time_judge(id = 1, pass = nil); m5_20150211_judge_time(id,1,pass);end
+  def self.save(id = 1); get[id] = [Time.now, $game_system.playtime]; end
+  def self.sys(id = 1, pass = nil); judge(id, true, pass); end
+  def self.ply(id = 1, pass = nil); judge(id, false, pass); end
+end
+class Game_Interpreter
+  def m5_save_time(id = 1); M5TP20150211.save(id); end
+  def sys_time_judge(id = 1, pass = nil); M5TP20150211.sys(id,pass); end
+  def ply_time_judge(id = 1, pass = nil); M5TP20150211.ply(id,pass); end
 end
