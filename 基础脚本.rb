@@ -13,8 +13,8 @@
 #
 #==============================================================================
 
-$m5script ||= {}
-$m5script["M5Base"] = $m5script[:M5Base] = 20150706
+$m5script ||= {}; $m5script[:ScriptData] ||= {}
+$m5script[:M5Base] = 20151008
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -24,12 +24,6 @@ module M5script
   def self.version(ver,hint = "喵呜喵5基础脚本版本过低！",key = :M5Base, h2="")
     version = $m5script[key.to_sym] || $m5script[key.to_s] || raise(h2)
     raise(hint) if (ver > version)
-  end
-  def self.show_error_message(pos="")
-    msgbox "当你看到这行信息时说明您使用的某个喵呜喵5的#{pos}脚本版本太旧了\n" +
-    "请检查会导致这个错误的脚本，并及时更新脚本\n\n" +
-    "如果最新版脚本问题仍然存在，请在对应脚本的下方向我留言回复"
-    exit
   end
 end
 #--------------------------------------------------------------------------
@@ -114,15 +108,17 @@ module M5script
   end
 end
 #--------------------------------------------------------------------------
-# ● 精灵 Sprite_M5
+# ● 精灵 Sprite_M5_Base / Sprite_M5
 #--------------------------------------------------------------------------
-class Sprite_M5 < Sprite
+class Sprite_M5_Base < Sprite
   def dispose
     dispose_bitmap
     super
   end
   def dispose_bitmap
   end
+end
+class Sprite_M5 < Sprite_M5_Base
 end
 #--------------------------------------------------------------------------
 # ● 显示端口 Viewport_M5
@@ -153,7 +149,7 @@ class Scene_Base
     m5_20141113_terminate
     instance_variables.each do |varname|
       ivar = instance_variable_get(varname)
-      ivar.dispose if ivar.is_a?(Sprite_M5)
+      ivar.dispose if ivar.is_a?(Sprite_M5_Base)
       ivar.dispose if ivar.is_a?(Spriteset_M5)
       ivar.dispose if ivar.is_a?(Viewport_M5)
     end
@@ -178,7 +174,7 @@ end
 #     m5_font_height      默认文字高度
 #     m5_font_size_change 调整文字大小
 #--------------------------------------------------------------------------
-module M5script;module M5_Window_FontSize
+module M5script; module M5_Window_FontSize
   def m5_font_size_change(width = m5_font_width, height = m5_font_height)
     contents.font.size = 40
     contents.font.size -= 1 while text_size("口").width > width if width
@@ -377,23 +373,22 @@ module SceneManager
   end
 end
 #--------------------------------------------------------------------------
-# ● 被删除的旧版方法
+# ● 读取、写入Game.ini
+#
+#     M5script::M5ini.get(key, default_value[, section])
+#     M5script::M5ini.write(key, value[, section])
 #--------------------------------------------------------------------------
-class Font
-  def m5_return_all_setting; M5script.show_error_message("文字/字体"); end
-  def m5_set_all_setting(set); M5script.show_error_message("文字/字体"); end
-end
-class Window_M5CalText
-  def initialize; M5script.show_error_message("信息显示"); end
-end
-class Window_M5Help
-  def initialize; M5script.show_error_message("信息显示"); end
-end
-module M5script
-  module M5_Window_Gauge
-    def self.included *args; M5script.show_error_message("信息显示"); end
+module M5script; module M5ini; class << self
+  def filename; './Game.ini'; end
+  def default_section; 'M5script'; end
+  def get(key, default_value, section = default_section)
+    buffer = [].pack('x256')
+    api = Win32API.new('kernel32','GetPrivateProfileString','ppppip', 'i')
+    l = api.call(section, key, default_value, buffer, buffer.size, filename)
+    return buffer[0, l]
   end
-  module M5_Window_Icons
-    def self.included *args; M5script.show_error_message("信息显示"); end
+  def write(key, value, section = default_section)
+    api = Win32API.new('kernel32','WritePrivateProfileString','pppp', 'i')
+    api.call(section, key, value.to_s, filename)
   end
-end
+end; end; end
