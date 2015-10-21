@@ -14,7 +14,7 @@
 
 =end
 $m5script ||= {}
-$m5script[:M5Reflect20151020] = 20151020
+$m5script[:M5Reflect20151020] = 20151021
 module M5Reflect20151020
 #==============================================================================
 #  设定部分
@@ -37,13 +37,6 @@ module M5Reflect20151020
 
   # 当角色装备面数字对应ID的防具时，物理反击的效果变成物理反弹的效果
 
-  FORMULA = 'a.atk - a.def + (%s)'
-
-  # 如果希望物理伤害反弹时伤害公式也发生改变的话，可以在这里设置新的公式
-  # 公式的设置格式和数据库中的伤害公式相同，不过a、b指的都是受到攻击者
-  # %s 表示原本的伤害公式
-  # 不需要改变伤害公式的话，这里直接设置成 '%s' 即可
-
 #==============================================================================
 #  设定结束
 #==============================================================================
@@ -61,11 +54,12 @@ class Scene_Battle
   alias m5_20131123_invoke_counter_attack invoke_counter_attack
   def invoke_counter_attack(target, item)
     if M5Reflect20151020.check(target)
-      m5 = M5Reflect20151020
-      item = item.clone
-      item.damage.formula = sprintf(m5::FORMULA, item.damage.formula)
+      # item = item.clone
+      # item.damage = item.damage.clone
+      # formula = 'a.atk - a.def + (%s)'
+      # item.damage.formula = sprintf(formula, item.damage.formula)
       Sound.play_evasion
-      @log_window.add_text sprintf(m5::HINT, target.name)
+      @log_window.add_text sprintf(M5Reflect20151020::HINT, target.name)
       @log_window.wait
       @log_window.back_one
       apply_item_effects(@subject, item)

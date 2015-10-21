@@ -12,7 +12,7 @@
   如果连位置都要修改的话……自己给我用PS去调整啦！
 
 =end
-$m5script ||= {};$m5script[:M5MF20140805] = 20151020
+$m5script ||= {};$m5script[:M5MF20140805] = 20151021
 module M5MF20140805
 #==============================================================================
 # 设定部分
@@ -46,16 +46,20 @@ module M5MF20140805
 # 设定结束
 #==============================================================================
   def self.check(filename)
-    proc = Proc.new do |list, condition|
-      list.each do |data|
-        next if filename != data[1]
-        next unless condition.call(data[0])
-        return data[2]
+    begin
+      proc = Proc.new do |list, condition|
+        list.each do |data|
+          next if filename != data[1]
+          next unless condition.call(data[0])
+          return data[2]
+        end
       end
+      proc.call SWI, -> id { $game_switches[id] }
+      actor_id = $game_party.members[0].id
+      proc.call LEADER, -> id { actor_id == id }
+    rescue
+      p "头像批量修改脚本出现未知异常"
     end
-    proc.call SWI, -> id { $game_switches[id] }
-    actor_id = $game_party.members[0].id
-    proc.call LEADER, -> id { actor_id == id }
     filename
   end
 end
