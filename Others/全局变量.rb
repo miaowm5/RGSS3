@@ -13,7 +13,7 @@
   使用全局变量可以用来制作类似记录通关次数或者进入二周目这样的功能
 
 =end
-$m5script ||= {};$m5script[:M5GV20140811] = 20150320
+$m5script ||= {};$m5script[:M5GV20140811] = 20151106
 $m5script[:ScriptData] ||= {}
 module M5GV20140811
 #==============================================================================
@@ -39,29 +39,35 @@ module M5GV20140811
 #==============================================================================
 #  设定结束
 #==============================================================================
-  def self.save_var
-    var = []
-    ext = $m5script[:ScriptData][:M5GV20140811]
-    VAR.each {|index| var.push $game_variables[index] }
-    save_data([var,ext], FILENAME)
+class << self
+  def load
+    $m5script[:ScriptData][:M5GV20140811] =
+      (load_data(FILENAME) rescue [nil, {}])
   end
-  def self.save_ext(ext = $m5script[:ScriptData][:M5GV20140811])
-    var = File.exist?(FILENAME) ? load_data(FILENAME)[0] : []
-    save_data([var,ext], FILENAME)
-  end
-  def self.load_var
-    return unless File.exist?(FILENAME)
-    var = load_data(FILENAME)[0]
+  def save; save_data($m5script[:ScriptData][:M5GV20140811], FILENAME); end
+  def load_var
+    var = $m5script[:ScriptData][:M5GV20140811][0]
+    return unless var
     var.each_with_index{|v,i| $game_variables.m5_20140811_set(VAR[i], v)}
   end
-  def self.load_ext
-    return {} unless File.exist?(FILENAME)
-    return load_data(FILENAME)[1]
+  def current_var
+    var = []
+    VAR.each {|index| var << $game_variables[index] }
+    return var
   end
-  def self.get_ext
-    return $m5script[:ScriptData][:M5GV20140811]
+  def save_var
+    $m5script[:ScriptData][:M5GV20140811][0] = current_var
+    save
   end
+  def get_ext; $m5script[:ScriptData][:M5GV20140811][1]; end
+  def save_ext; save; end
+  def set_ext(key, value)
+    get_ext[key] = value
+    save
+  end
+end # class << self
 end
+
 class Game_Variables
   alias m5_20140811_set []=
   def []=(variable_id, value)
@@ -89,4 +95,4 @@ class Game_Interpreter
   def save_var; M5GV20140811.save_var; end
   def load_var; M5GV20140811.load_var; end
 end
-$m5script[:ScriptData][:M5GV20140811] = M5GV20140811.load_ext
+M5GV20140811.load
