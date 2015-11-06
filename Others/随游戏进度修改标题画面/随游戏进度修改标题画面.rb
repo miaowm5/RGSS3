@@ -17,8 +17,9 @@
   (在脚本中更改某个设置后需要再次执行该指令更改的设置才会生效)
 
 =end
-$m5script ||= {};$m5script[:M5TC20150320] = 20150824
+$m5script ||= {};$m5script[:M5TC20150320] = 20151106
 raise "需要喵呜喵5全局变量脚本的支持" unless $m5script[:M5GV20140811]
+raise "喵呜喵5全局变量脚本版本过低" unless $m5script[:M5GV20140811] >= 20151106
 module M5TC20150320
   SETTING = {
 #==============================================================================
@@ -146,11 +147,10 @@ class Game_Interpreter
       :opa => nil,
     }
     set = M5TC20150320::SETTING["DEA"] || {}
-    setting.map{|k, v| setting[k] = set[k] ? set[k] : v }
+    setting.merge!(set)
     set = M5TC20150320::SETTING[name] || {}
-    setting.map{|k, v| setting[k] = set[k] ? set[k] : v }
-    M5GV20140811.get_ext[:M5TC20150320] = setting
-    M5GV20140811.save_ext
+    setting.merge!(set)
+    M5GV20140811.set_ext(:M5TC20150320, setting)
   end
 end
 M5GV20140811.get_ext[:M5TC20150320] ||= M5TC20150320::SETTING["DEA"] || {}
