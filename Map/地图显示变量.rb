@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20141202;M5script.version(20141113)
+$m5script[:M5Var20140815] = 20141210;M5script.version(20141208)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -35,6 +35,8 @@ module M5Var20140815;VAR_CONFIG =[
   HINT1    在变量的数值前面显示的提示文字（前后要加双引号）
   HINT2    在变量的数值后面显示的提示文字（前后要加双引号）
   BACK     变量窗口的背景图片，文件放在Graphics/System/下（前后要加双引号）
+  SX       变量窗口的背景图片X坐标
+  SY       变量窗口的背景图片Y坐标
   SWI      窗口的开关ID，当对应ID的开关打开时不显示这个窗口
   INVERSE  当设置为 true 时，对应ID的开关打开时才显示这个窗口
   ONLY     当设置为 true 时，窗口将不显示变量的ID，只显示提示文字
@@ -42,7 +44,7 @@ module M5Var20140815;VAR_CONFIG =[
   EVAL     窗口显示的内容变为代码的返回值，VAR属性将被忽略（需要双引号）
             （※ 如果不懂意思的话请不要设置这个属性）
   SCENE    窗口只在特定的场景才显示，如果不懂意思的话请不要设置这个属性
-  
+
 =end
 
   {
@@ -61,7 +63,7 @@ module M5Var20140815;VAR_CONFIG =[
   HINT1: "2号变量的\n值是：",
   BACK: "var",
   },
-  
+
   {
   VAR:     1,
   X:       0,
@@ -71,33 +73,28 @@ module M5Var20140815;VAR_CONFIG =[
   SWI:     2,
   INVERSE: true,
   },
-  
+
   {
   EVAL:  "$game_player.x",
   HINT1: "玩家的地图X坐标为：",
   SCENE: Scene_Menu,
   },
-  
+
 
   ] # 请不要删除这行
 
   Z = 200             # 如果窗口遮住其他不希望遮住的内容了，请调小这个数值
 
   SWI = 1             # 对应ID的开关打开时不显示变量，这个设置优先于各个窗口的设置
-  
+
     SWI_INVERSE = false  # 设置为 true 时，上方对应ID的开关打开时才显示变量
-  
+
   SCENE = [Scene_Map] # 需要显示变量窗口的场景，不知道是什么意思的话请不要修改
 
 #==============================================================================
 #  设定结束
 #==============================================================================
-end
-#--------------------------------------------------------------------------
-# ● Window_M5_20140815_Var
-#--------------------------------------------------------------------------
-class Window_M5_20140815_Var < Window_Base
-  include M5Var20140815
+class Window_Var < Window_Base
   #--------------------------------------------------------------------------
   # ● 开始处理
   #--------------------------------------------------------------------------
@@ -108,34 +105,29 @@ class Window_M5_20140815_Var < Window_Base
     self.arrows_visible = false
     self.z = Z
     self.openness = 0
-    refresh    
     create_back_sprite
+    update
   end
   #--------------------------------------------------------------------------
   # ● 获取窗口的设置
   #--------------------------------------------------------------------------
   def get_config(config)
-    @var,@eval = config[:VAR],config[:EVAL]    
-    @x,@y = config[:X],config[:Y]
-    @x2,@y2 = config[:X2],config[:Y2]
-    @hint1,@hint2 = config[:HINT1],config[:HINT2]
-    @back = config[:BACK]
-    @swi = config[:SWI]    
-    @only = config[:ONLY]
-    @hint1 ||= ""
-    @hint2 ||= ""
-    @swi ||= 0
-    @swi *= -1 if config[:INVERSE]
+    @config = config.clone
+    @config[:SX] ||= 0
+    @config[:SY] ||= 0
+    @config[:HINT1] ||= ""
+    @config[:HINT2] ||= ""
   end
   #--------------------------------------------------------------------------
   # ● 显示窗口的背景
   #--------------------------------------------------------------------------
   def create_back_sprite
-    return unless @back
+    return unless @config[:BACK]
     self.opacity = 0
-    bitmap = Cache.system(@back) rescue nil
+    bitmap = Cache.system(@config[:BACK]) rescue nil
     return unless bitmap
     @background_sprite = Sprite.new
+    @background_sprite.x, @background_sprite.y = @config[:SX], @config[:SY]
     @background_sprite.z = self.z - 1
     @background_sprite.bitmap = bitmap
   end
@@ -144,7 +136,7 @@ class Window_M5_20140815_Var < Window_Base
   #--------------------------------------------------------------------------
   def update
     super
-    return if update_close_judge    
+    return if update_close_judge
     @background_sprite.opacity = 255 if @background_sprite and \
     @background_sprite.opacity != 255
     open if close?
@@ -153,7 +145,7 @@ class Window_M5_20140815_Var < Window_Base
   #--------------------------------------------------------------------------
   # ● 更新窗口的关闭判断
   #--------------------------------------------------------------------------
-  def update_close_judge    
+  def update_close_judge
     if close_judge
       @background_sprite.opacity = 0 if @background_sprite and \
       @background_sprite.opacity != 0
@@ -165,30 +157,32 @@ class Window_M5_20140815_Var < Window_Base
   #--------------------------------------------------------------------------
   # ● 窗口是否应该关闭?
   #--------------------------------------------------------------------------
-  def close_judge    
+  def close_judge
     return true if $game_switches[SWI]  && !SWI_INVERSE
-    return true if !$game_switches[SWI] &&  SWI_INVERSE    
-    if @swi >= 0 then return true if $game_switches[@swi]
-    else return true if !$game_switches[-@swi]
+    return true if !$game_switches[SWI] &&  SWI_INVERSE
+    if @config[:SWI]
+      if @config[:INVERSE] then return true if !$game_switches[@config[:SWI]]
+      else return true if $game_switches[@config[:SWI]]
+      end
     end
-    false    
+    false
   end
   #--------------------------------------------------------------------------
   # ● 更新窗口内容
   #--------------------------------------------------------------------------
   def update_content
-    if @eval then refresh if eval(@eval) != @cont
-    else refresh if $game_variables[@var] != @cont
+    if @config[:EVAL] then refresh if eval(@config[:EVAL]) != @cont
+    else refresh if $game_variables[@config[:VAR]] != @cont
     end
   end
   #--------------------------------------------------------------------------
   # ● 描绘文字
   #--------------------------------------------------------------------------
   def refresh
-    if @eval then @cont = eval(@eval)
-    else @cont = $game_variables[@var]
+    if @config[:EVAL] then @cont = eval(@config[:EVAL])
+    else @cont = $game_variables[@config[:VAR]]
     end
-    @word = "#{@hint1}#{@only ? "" : @cont}#{@hint2}"
+    @word = "#{@config[:HINT1]}#{@config[:ONLY] ? "" : @cont}#{@config[:HINT2]}"
     update_placement
     update_position
     contents.clear
@@ -198,12 +192,14 @@ class Window_M5_20140815_Var < Window_Base
   # ● 更新窗口大小
   #--------------------------------------------------------------------------
   def update_placement
-    if @x && @x2 then self.width = (@x2 - @x).abs
+    if @config[:X] && @config[:X2]
+      self.width = (@config[:X2] - @config[:X]).abs
     else
       self.width  = @size_window.cal_all_text_width(@word)
       self.width += standard_padding * 2
     end
-    if @y && @y2 then self.height = (@y2 - @y).abs
+    if @config[:Y] && @config[:Y2]
+      self.height = (@config[:Y2] - @config[:Y]).abs
     else
       self.height = @size_window.cal_all_text_height(@word)
       self.height += standard_padding * 2
@@ -213,14 +209,14 @@ class Window_M5_20140815_Var < Window_Base
   #--------------------------------------------------------------------------
   # ● 更新窗口位置
   #--------------------------------------------------------------------------
-  def update_position    
-    if    @x  then self.x = @x
-    elsif @x2 then self.x = @x2 - self.width
-    else           self.x = 0
+  def update_position
+    if    @config[:X]  then self.x = @config[:X]
+    elsif @config[:X2] then self.x = @config[:X2] - self.width
+    else                    self.x = 0
     end
-    if    @y  then self.y = @y
-    elsif @y2 then self.y = @y2 - self.height
-    else           self.y = 0
+    if    @config[:Y]  then self.y = @config[:Y]
+    elsif @config[:Y2] then self.y = @config[:Y2] - self.height
+    else                    self.y = 0
     end
   end
   #--------------------------------------------------------------------------
@@ -228,9 +224,10 @@ class Window_M5_20140815_Var < Window_Base
   #--------------------------------------------------------------------------
   def dispose
     super
-    @background_sprite.dispose if @background_sprite    
+    @background_sprite.dispose if @background_sprite
   end
 end
+end # M5Var20140815
 #--------------------------------------------------------------------------
 # ● Scene_Base
 #--------------------------------------------------------------------------
@@ -244,11 +241,11 @@ class Scene_Base
     return unless m5_20140815_check_scene
     @m5_20140815_cal_size_window = Window_M5CalText.new
     @m5_20140815_var_windows = Array.new(M5Var20140815::VAR_CONFIG.size) do |i|
-      config = M5Var20140815::VAR_CONFIG[i]      
+      config = M5Var20140815::VAR_CONFIG[i]
       next unless config
       next unless config[:VAR] || config[:EVAL]
       next unless m5_20140815_scene_need_show(config[:SCENE])
-      Window_M5_20140815_Var.new(config,@m5_20140815_cal_size_window)
+      M5Var20140815::Window_Var.new(config,@m5_20140815_cal_size_window)
     end
   end
   #--------------------------------------------------------------------------
@@ -270,11 +267,11 @@ class Scene_Base
   #--------------------------------------------------------------------------
   # ● 更新窗口
   #--------------------------------------------------------------------------
-  alias m5_20131103_update update  
+  alias m5_20131103_update update
   def update
     m5_20131103_update
     return unless @m5_20140815_var_windows
-    @m5_20140815_var_windows.each {|window| window.update if window}    
+    @m5_20140815_var_windows.each {|window| window.update if window}
   end
   #--------------------------------------------------------------------------
   # ● 释放窗口
