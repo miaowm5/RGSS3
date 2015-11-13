@@ -6,60 +6,66 @@
 【说明】
 
   将游戏中滚动文字的显示方式换成了可以上下移动的对话框窗口
-  
-  上下键用于翻页，左右键用于快速翻页，取消键可以回到开头部分，
-  确定键可以用来快速翻页，当翻到页底时关闭窗口
-  
+
+  上下键用于滚动文字，左右键用于加速滚动文字，取消键可以回到开头部分，
+  确定键同样可以用来加速滚动文字，当翻到页底时关闭窗口
+
   描绘文字需要耗费一定的时间，请尽量避免显示太多的文字
-  
+
 =end
-$m5script ||= {};$m5script["M5Read20140811"] = 20140811
+$m5script ||= {};$m5script[:M5Read20140811] = 20151113
 module M5Read20140811
 #==============================================================================
 #  设定部分
 #==============================================================================
-  
+
   WIDTH = 60
-  
+
   # 设置窗口的宽度，数字越大窗口越小
-  
+
   HEIGHT = 60
-  
+
   # 设置窗口的高度，数字越大窗口越小
-  
-  SPEED = 3
-  
-  # 设置文字滚动的速度，数字越大速度越快
-  
+
+  SPEED1 = 10
+
+  # 设置文字一次翻页的移动量，数字越大翻页时文字移动越多
+
+  SPEED2 = 6
+
+  # 设置文字加速翻页的移动量，数字越大加速翻页时文字移动越多
+
+  SCROLL_TIME = 3
+
+  # 设置文字翻页效果的持续时间，数字越小翻页速度越快
+
   SPACE = 9
-  
+
   # 设置在文字开头和结尾部分的留空大小，数字越大留空越多
-  
+
   EFFECT = 1
-  
+
   # 设置窗口的打开/关闭效果
   # 0 表示展开效果，1 表示淡化效果
-  
-  COME = 15
-  
-  # 设置窗口的打开、关闭速度，值越大速度越快
-  
+
+    COME = 15
+
+    # 设置窗口的打开、关闭效果速度，值越大速度越快
+
   BACK = true
-  
+
   # 设置窗口背景是否透明，为 false 时窗口背景透明
   # 背景透明时可以用显示图片指令来显示图片作为窗口的背景
-  
+
   SWI = 1
-  
+
   # 对应ID的开关打开时，恢复原本的滚动文字
-  
+
 #==============================================================================
 #  设定结束
 #==============================================================================
-end
 
-class Window_M5Read20140811 < Window_Base  
-  include M5Read20140811
+class Window < Window_Base
   def initialize
     super(WIDTH/2, HEIGHT/3, Graphics.width - WIDTH, Graphics.height - HEIGHT)
     self.opacity = 0 unless BACK
@@ -69,62 +75,70 @@ class Window_M5Read20140811 < Window_Base
       self.opacity = 0
       self.contents_opacity = 0
     end
-    set_mouse
+    @scroll_data = nil
   end
   def update
     super
     return if effecting
+    update_scroll
     if $game_message.scroll_mode
-      update_direction
-      update_ok
-      self.oy = -SPACE if Input.repeat?(:B)
       start_message if !@text && $game_message.has_text?
+      update_input
     end
+  end
+  def need_scroll
+    contents.height + SPACE * 2 > self.height - standard_padding * 2
+  end
+  def reach_bottom
+    return true unless need_scroll
+    self.oy >= contents.height - self.height + standard_padding * 2 + SPACE
+  end
+  def reach_top
+    return true unless need_scroll
+    self.oy <= - SPACE
   end
   #--------------------------------------------------------------------------
   # ● 更新玩家的按键操作
   #--------------------------------------------------------------------------
+  def update_input
+    update_direction
+    update_ok if Input.trigger?(:C)
+    update_cancel if Input.trigger?(:B)
+  end
   def update_direction
-    update_message_up if Input.press?(:UP)
-    update_message_down if Input.press?(:DOWN)
-    15.times {update_message_up} if Input.press?(:LEFT) || mouse_up
-    15.times {update_message_down} if Input.press?(:RIGHT) || mouse_down
+    set_scroll(-SPEED1) if Input.press?(:UP)
+    set_scroll(SPEED1) if Input.press?(:DOWN)
+    set_scroll(-SPEED1 * SPEED2) if Input.press?(:LEFT)
+    set_scroll(SPEED1 * SPEED2) if Input.press?(:RIGHT)
   end
   def update_ok
-    if Input.trigger?(:C)
-      if self.oy < contents.height - self.height + standard_padding * 2 + SPACE
-        30.times {update_message_down}
-      else
-        terminate_message
-      end
+    if reach_bottom then terminate_message
+    else set_scroll(SPEED1 * SPEED2 * 2)
     end
+  end
+  def update_cancel
+    set_scroll(-self.oy - SPACE)
   end
   #--------------------------------------------------------------------------
-  # ● Sion 鼠标脚本的相关处理
+  # ● 文字滚动效果的处理
   #--------------------------------------------------------------------------
-  def mouse_up
-    return false unless @mouse
-    if @mouse < Mouse.z
-      @mouse = Mouse.z
-      return true
-    end
-    false
+  def set_scroll(amount)
+    return unless need_scroll
+    @scroll_data = {}
+    @scroll_data[:speed] = (amount.to_f / SCROLL_TIME).to_i
+    @scroll_data[:target] = self.oy + @scroll_data[:speed] * SCROLL_TIME
   end
-  def mouse_down
-    return false unless @mouse
-    if @mouse > Mouse.z
-      @mouse = Mouse.z
-      return true
+  def update_scroll
+    return unless @scroll_data
+    if self.oy == @scroll_data[:target]       ||
+      (@scroll_data[:speed] < 0 && reach_top) ||
+      (@scroll_data[:speed] > 0 && reach_bottom)
+      @scroll_data = nil
+      return
     end
-    false
-  end
-  def set_mouse
-    if $SINOVA and $SINOVA[:mouseBase] and ($SINOVA[:mouseBase] >= 3.00)
-      Mouse.reset_z
-      @mouse = Mouse.z
-    else
-      @mouse = nil
-    end
+    self.oy += @scroll_data[:speed]
+    self.oy = [[-SPACE, self.oy].max,
+        contents.height - self.height + standard_padding * 2 + SPACE].min
   end
   #--------------------------------------------------------------------------
   # ● 文字开始/结束显示
@@ -133,7 +147,6 @@ class Window_M5Read20140811 < Window_Base
     @text = $game_message.all_text
     self.oy = -SPACE
     refresh
-    set_mouse
     open
   end
   def terminate_message
@@ -158,19 +171,9 @@ class Window_M5Read20140811 < Window_Base
     @all_text_height ? @all_text_height : super
   end
   #--------------------------------------------------------------------------
-  # ● 文字滚动效果的处理
-  #--------------------------------------------------------------------------  
-  def update_message_down    
-    self.oy = [self.oy + SPEED,
-    contents.height - self.height + standard_padding * 2 + SPACE ].min
-  end
-  def update_message_up    
-    self.oy = [self.oy - SPEED,- SPACE ].max
-  end
-  #--------------------------------------------------------------------------
   # ● 打开/关闭特效的处理
-  #--------------------------------------------------------------------------  
-  def open    
+  #--------------------------------------------------------------------------
+  def open
     @opening = true if self.contents_opacity != 255
     super
   end
@@ -178,7 +181,7 @@ class Window_M5Read20140811 < Window_Base
     @closing = true if self.contents_opacity != 0
     super
   end
-  def update_open    
+  def update_open
     case EFFECT
     when 0
       self.openness += COME
@@ -203,17 +206,18 @@ class Window_M5Read20140811 < Window_Base
       if self.contents_opacity <= 0
         @closing = false
         self.arrows_visible = false
-      end      
+      end
     end
   end
-  def effecting;return @opening || @closing;end
+  def effecting; @opening || @closing; end
 end
+end # module M5Read20140811
 
 class Window_ScrollText
   alias m5_20140811_initialize initialize
   def initialize
     m5_20140811_initialize
-    @m5_20140811_read = Window_M5Read20140811.new
+    @m5_20140811_read = M5Read20140811::Window.new
   end
   alias m5_20140811_dispose dispose
   def dispose
@@ -228,6 +232,27 @@ class Window_ScrollText
     else
       super
       @m5_20140811_read.update
-    end    
+    end
   end
 end
+#--------------------------------------------------------------------------
+# ● Sion 鼠标脚本的相关处理
+#--------------------------------------------------------------------------
+if $SINOVA and $SINOVA[:mouseBase] and ($SINOVA[:mouseBase] >= 3.00)
+class M5Read20140811::Window
+  alias m5_20151113_open open
+  def open
+    Mouse.reset_z
+    @mouse = Mouse.z
+    m5_20151113_open
+  end
+  alias m5_20151113_update_input
+    if @mouse != Mouse.z
+      set_scroll(-SPEED1 * SPEED2) if @mouse < Mouse.z
+      set_scroll(SPEED1 * SPEED2) if @mouse > Mouse.z
+      @mouse = Mouse.z
+    end
+    m5_20151113_update_input
+  end
+end
+end # if $SINOVA[:mouseBase]
