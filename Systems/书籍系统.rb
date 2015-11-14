@@ -22,7 +22,7 @@
 
 
 =end
-$m5script ||= {};$m5script[:M5Book20151113] = 20151113
+$m5script ||= {};$m5script[:M5Book20151113] = 20151114
 module M5Book20151113; CONFIG ={
 =begin
 #==============================================================================
@@ -33,7 +33,8 @@ module M5Book20151113; CONFIG ={
 
     :书籍的名称 => { 书籍的设置 },
 
-    ※书籍名称开头的英文冒号以及书籍设置最后的英文逗号不能省略
+    ※ 书籍名称开头的英文冒号以及书籍设置最后的英文逗号不能省略
+    ※ 名为 :默认书籍 的设置为【所有】书籍的默认设置
 
   在两个大括号之间，可以设置书籍本身的属性，设置的格式为：
 
@@ -58,6 +59,19 @@ module M5Book20151113; CONFIG ={
               当设置了这个属性后，上方的 MAX 属性将失效
 
   BACK        界面的背景图片文件名，文件名前后需要加上英文引号
+              背景图片文件的目录始终为“Graphics/M5Book”
+
+  FORE        界面的遮罩图片文件名，文件名前后需要加上英文引号
+              遮罩图片文件的目录始终为“Graphics/M5Book”
+
+  HINT        界面的提示图片文件名，文件名前后需要加上英文引号
+              提示图片文件的目录始终为“Graphics/M5Book”
+              提示图片和遮罩图片类似，都是显示在界面最上方
+              不过长时间没有按键时，提示图片会自动隐藏
+
+  HIDE_TIME   设置多长时间没有操作时自动隐藏提示图片
+
+  HIDE_SPEED  设置提示图片隐藏/显示的速度
 
   START_PAGE  书籍最开始的页数
 
@@ -99,7 +113,18 @@ module M5Book20151113; CONFIG ={
   CLOSE_BUTTON2   书籍翻到最后一页时关闭书籍界面的按钮
                   默认为 :C 键（默认对应键盘的 Z 键）
 
+
 =end
+
+  :默认书籍 => {
+
+    PAGE_SE: "Book2",
+
+    ERROR_SE: "Book1",
+
+  },
+
+  # 这个设置中设置的属性为所有书籍的默认属性，这里为所有书籍的翻页增加了音效
 
   :书籍1 => {
 
@@ -125,13 +150,17 @@ module M5Book20151113; CONFIG ={
 
     LIST: ['cg2','cg0'],
 
-    BACK: "pic1",
+    BACK: "back",
+
+    FORE: "fore",
+
+    HINT: "hint",
 
     SPEED: 5,
 
   },
 
-  # 名为 书籍3 的书籍拥有界面背景，翻页速度特慢
+  # 名为 书籍3 的书籍拥有前景、背景和提示，翻页速度特慢
 
   :书籍4 => {
 
@@ -161,13 +190,12 @@ module M5Book20151113; CONFIG ={
 
     CLOSE_SE: "Cat",
 
-    PAGE_SE: "Book2",
-
-    ERROR_SE: "Book1",
+    ERROR_SE: "Dog",
 
   },
 
-  # 名为 书籍5 的书籍最开始显示第二张图片，同时有音效
+  # 名为 书籍5 的书籍最开始显示第二张图片，同时打开、关闭时有音效，
+  # 并覆盖了默认翻页错误音效
 
 #==============================================================================
 #  设定结束
@@ -183,7 +211,12 @@ class Scene < Scene_MenuBase
     @cache[path] = filename.empty? ? Bitmap.new(32,32) : Bitmap.new(path)
   end
   def input?(list)
-    list.each{|i| return true if Input.trigger?(i) }
+    list.each do |i|
+      if Input.trigger?(i)
+        @hint_state[0] = :showing
+        return true
+      end
+    end
     false
   end
   def prepare(config)
@@ -202,16 +235,22 @@ class Scene < Scene_MenuBase
     @config[:NEXT_BUTTON] ||= [:RIGHT, :C]
     @config[:PRE_BUTTON] ||= [:LEFT]
     @config[:SPEED] ||= 20
+    @config[:HIDE_TIME] ||= 60
+    @config[:HIDE_SPEED] ||= 20
   end
   def start
     super
     create_page
+    create_foreground
+    create_hint
     Audio.se_play "Audio/SE/#{@config[:OPEN_SE]}" if @config[:OPEN_SE]
   end
   def create_background
+    @background_bitmap = nil
     if @config[:BACK]
       @background_sprite = Sprite.new
-      @background_sprite.bitmap = bitmap(@config[:BACK])
+      @background_bitmap = Bitmap.new "Graphics/M5Book/#{@config[:BACK]}"
+      @background_sprite.bitmap = @background_bitmap
     else
       super
     end
@@ -223,13 +262,49 @@ class Scene < Scene_MenuBase
     @next_sprite = Sprite.new
     @next_sprite.bitmap = bitmap(@config[:LIST][@page_index])
     @now_sprite.bitmap = @next_sprite.bitmap
-    @next_sprite.z = 10
+    @now_sprite.z, @next_sprite.z = 50, 100
+  end
+  def create_foreground
+    @foreground = Sprite.new
+    @foreground.z = 150
+    if @config[:FORE]
+      @foreground.bitmap = Bitmap.new "Graphics/M5Book/#{@config[:FORE]}"
+    end
+  end
+  def create_hint
+    @hint = Sprite.new
+    @hint.z = 200
+    if @config[:HINT]
+      @hint.bitmap = Bitmap.new "Graphics/M5Book/#{@config[:HINT]}"
+    end
+    @hint_state = [:show, @config[:HIDE_TIME]]
   end
   def update
     super
+    update_hint_image
     return update_page if @page_change
-    @now_sprite.opacity -= @config[:SPEED]
+    @now_sprite.opacity -= @config[:SPEED] unless @now_sprite.opacity == 0
     update_input
+  end
+  def update_hint_image
+    return unless @hint.bitmap
+    case @hint_state[0]
+    when :showing
+      @hint.opacity += @config[:HIDE_SPEED]
+      @hint_state = [:show, @config[:HIDE_TIME]] if @hint.opacity == 255
+    when :show
+      return if @page_change
+      time = @hint_state[1]
+      time -= 1
+      @hint_state[0] = :hiding if time < 0
+      @hint_state[1] = time
+    when :hiding
+      @hint.opacity -= @config[:HIDE_SPEED] unless @hint.opacity == 0
+    end
+  end
+  def update_page
+    @next_sprite.opacity += @config[:SPEED]
+    @page_change = false if @next_sprite.opacity == 255
   end
   def update_input
     change_page(-1) if input?(@config[:PRE_BUTTON])
@@ -257,27 +332,28 @@ class Scene < Scene_MenuBase
   end
   def set_bitmap
     @now_sprite, @next_sprite = @next_sprite, @now_sprite
-    @now_sprite.z, @next_sprite.z = 0, 10
+    @now_sprite.z, @next_sprite.z = 50, 100
     @now_sprite.opacity = 255
     @next_sprite.opacity = 0
     @next_sprite.bitmap = bitmap(@config[:LIST][@page_index])
-  end
-  def update_page
-    @next_sprite.opacity += @config[:SPEED]
-    @page_change = false if @next_sprite.opacity == 255
   end
   def terminate
     Audio.se_play "Audio/SE/#{@config[:CLOSE_SE]}" if @config[:CLOSE_SE]
     super
     @now_sprite.dispose
     @next_sprite.dispose
+    @foreground.bitmap.dispose if @foreground.bitmap
+    @foreground.dispose
+    @hint.bitmap.dispose if @hint.bitmap
+    @hint.dispose
     @cache.each_value(&:dispose)
+    @background_bitmap.dispose if @background_bitmap
   end
 end
 
   def self.open(name)
-    config = CONFIG[name]
-    raise '书籍不存在' unless config
+    config = CONFIG[:默认书籍] || {}
+    config = config.merge (CONFIG[name] || {})
     raise '未设置书籍内容' unless config[:LIST] || config[:MAX]
     SceneManager.call(Scene)
     SceneManager.scene.prepare(config)
