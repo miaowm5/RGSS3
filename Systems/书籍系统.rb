@@ -22,7 +22,7 @@
 
 
 =end
-$m5script ||= {};$m5script[:M5Book20151113] = 20151114
+$m5script ||= {};$m5script[:M5Book20151113] = 20151120
 module M5Book20151113; CONFIG ={
 =begin
 #==============================================================================
@@ -54,9 +54,16 @@ module M5Book20151113; CONFIG ={
 
   LIST        书籍的图片文件名列表，设置格式为 ['文件名1','文件名2','文件名n']
               ※ 文件名前后加上英文引号，中间用英文逗号分隔
-              例如，设置为 ['1','2','4','5']时，
+              例如，设置为 ['1','2','4','5'] 时，
               显示的图片便为指定目录下名为 1、2、4、5 的这四张图片
               当设置了这个属性后，上方的 MAX 属性将失效
+
+              当这里设置为 ['0',['1',100,100],['1',100,200],'2'] 时
+              书籍的第二页显示名为 1 的图片，显示位置为(100,100)
+              翻到第三页时，图片不会改变，而是将显示位置移动到(100,200)
+
+  MOVE_SPEED  当图片设置了移动时（上面后半部分提到的设置方式），
+              图片的移动速度
 
   BACK        界面的背景图片文件名，文件名前后需要加上英文引号
               背景图片文件的目录始终为“Graphics/M5Book”
@@ -124,7 +131,7 @@ module M5Book20151113; CONFIG ={
 
   },
 
-  # 这个设置中设置的属性为所有书籍的默认属性，这里为所有书籍的翻页增加了音效
+  # 这个设置中设置的属性将应用到所有书籍中，这里为所有书籍的翻页增加了音效
 
   :书籍1 => {
 
@@ -197,6 +204,16 @@ module M5Book20151113; CONFIG ={
   # 名为 书籍5 的书籍最开始显示第二张图片，同时打开、关闭时有音效，
   # 并覆盖了默认翻页错误音效
 
+  :书籍6 => {
+
+    LIST: ['cg', ['cg',-140,0], ['cg',-280,0]],
+
+    MOVE_SPEED: 5,
+
+  },
+
+  # 名为 书籍6 的书籍演示了如何制作书籍图片移动的效果
+
 #==============================================================================
 #  设定结束
 #==============================================================================
@@ -235,6 +252,7 @@ class Scene < Scene_MenuBase
     @config[:NEXT_BUTTON] ||= [:RIGHT, :C]
     @config[:PRE_BUTTON] ||= [:LEFT]
     @config[:SPEED] ||= 20
+    @config[:MOVE_SPEED] ||= 10
     @config[:HIDE_TIME] ||= 60
     @config[:HIDE_SPEED] ||= 20
   end
@@ -247,22 +265,22 @@ class Scene < Scene_MenuBase
   end
   def create_background
     @background_bitmap = nil
-    if @config[:BACK]
-      @background_sprite = Sprite.new
-      @background_bitmap = Bitmap.new "Graphics/M5Book/#{@config[:BACK]}"
-      @background_sprite.bitmap = @background_bitmap
-    else
-      super
-    end
+    return super unless @config[:BACK]
+    @background_sprite = Sprite.new
+    @background_bitmap = Bitmap.new "Graphics/M5Book/#{@config[:BACK]}"
+    @background_sprite.bitmap = @background_bitmap
   end
   def create_page
     @page_index = @config[:START_PAGE]
     @page_change = false
     @now_sprite = Sprite.new
     @next_sprite = Sprite.new
-    @next_sprite.bitmap = bitmap(@config[:LIST][@page_index])
-    @now_sprite.bitmap = @next_sprite.bitmap
-    @now_sprite.z, @next_sprite.z = 50, 100
+    page = @config[:LIST][@page_index]
+    page = [page, 0, 0] unless page.is_a? Array
+    @next_sprite.bitmap = bitmap(page[0])
+    @next_sprite.x, @next_sprite.y = page[1], page[2]
+    @now_sprite.opacity = 0
+    @next_sprite.z = 100
   end
   def create_foreground
     @foreground = Sprite.new
@@ -302,9 +320,29 @@ class Scene < Scene_MenuBase
       @hint.opacity -= @config[:HIDE_SPEED] unless @hint.opacity == 0
     end
   end
+
   def update_page
+    case @page_change_type[0]
+    when :image then update_image_change
+    when :move then update_image_move(@page_change_type[1])
+    end
+  end
+  def update_image_change
     @next_sprite.opacity += @config[:SPEED]
     @page_change = false if @next_sprite.opacity == 255
+  end
+  def update_image_move(data)
+    s = @next_sprite
+    proc = ->(target, direction, orign) do
+      next orign if target == orign
+      speed = @config[:MOVE_SPEED]
+      speed *= -1 unless direction
+      result = orign + speed
+      direction ? [result, target].min : [result, target].max
+    end
+    s.x = proc.call(data[:TX], data[:X], s.x)
+    s.y = proc.call(data[:TY], data[:Y], s.y)
+    s.x == data[:TX] && s.y == data[:TY] && @page_change = false
   end
   def update_input
     change_page(-1) if input?(@config[:PRE_BUTTON])
@@ -324,18 +362,35 @@ class Scene < Scene_MenuBase
     if old_page != @page_index
       Audio.se_play "Audio/SE/#{@config[:PAGE_SE]}" if @config[:PAGE_SE]
       @page_change = true
-      set_bitmap
+      set_page(old_page, @page_index)
       Input.update
     else
       Audio.se_play "Audio/SE/#{@config[:ERROR_SE]}" if @config[:ERROR_SE]
     end
   end
-  def set_bitmap
+  def set_page(old_page, new_page)
+    old_data = @config[:LIST][old_page]
+    new_data = @config[:LIST][new_page]
+    old_data = [old_data, 0, 0] unless old_data.is_a? Array
+    new_data = [new_data, 0, 0] unless new_data.is_a? Array
+    return set_move(*new_data) if new_data[0] == old_data[0]
+    set_bitmap(*new_data)
+  end
+  def set_bitmap(filename, x, y)
     @now_sprite, @next_sprite = @next_sprite, @now_sprite
     @now_sprite.z, @next_sprite.z = 50, 100
-    @now_sprite.opacity = 255
-    @next_sprite.opacity = 0
-    @next_sprite.bitmap = bitmap(@config[:LIST][@page_index])
+    @now_sprite.opacity, @next_sprite.opacity = 255, 0
+    @next_sprite.bitmap = bitmap(filename)
+    @next_sprite.x, @next_sprite.y = x, y
+    @page_change_type = [:image]
+  end
+  def set_move(_, tx, ty)
+    move_data = {
+      TX: tx, TY: ty,
+      X:  tx - @next_sprite.x > 0,
+      Y:  ty - @next_sprite.y > 0
+    }
+    @page_change_type = [:move, move_data]
   end
   def terminate
     Audio.se_play "Audio/SE/#{@config[:CLOSE_SE]}" if @config[:CLOSE_SE]
