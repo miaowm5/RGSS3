@@ -58,8 +58,9 @@ class Window_SaveFile
   alias m5_20151202_refresh refresh
   def refresh
     m5_20151202_refresh
-    contents.clear_rect Rect.new *M5SN20151202::ORIGIN
     name = M5SN20151202::NAME[@file_index]
+    return unless name
+    contents.clear_rect Rect.new *M5SN20151202::ORIGIN
     draw_text(*M5SN20151202::TARGET, name)
     @name_width = text_size(name).width
   end
