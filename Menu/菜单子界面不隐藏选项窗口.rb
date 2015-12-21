@@ -10,9 +10,11 @@
   具体来说的话，这个脚本是为了应对下面这种情况所以才写的：
   http://rm.66rpg.com/thread-374019-1-1.html
 
+  请注意，这个脚本只适用于菜单的子界面，
+  若通过子界面打开的新的子界面也被设置为不隐藏选项窗口时画面将出现异常
+
 =end
-$m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5MCS20141125] = 20150211;M5script.version(20150211)
+$m5script ||= {}; $m5script[:M5MCS20141125] = 20151221
 module M5MCS20141125
 #==============================================================================
 # 设定部分
@@ -34,25 +36,27 @@ module M5MCS20141125
 #==============================================================================
 # 设定结束
 #==============================================================================
+  def self.snapshot
+    @background_bitmap.dispose if @background_bitmap
+    @background_bitmap = Graphics.snap_to_bitmap
+  end
+  def self.background; @background_bitmap; end
 end
 class Scene_MenuBase
   alias m5_20141125_create_background create_background
   def create_background
     m5_20141125_create_background
-    return unless m5_20141125_check_scene
-    @m5_20141125_background = SceneManager.m5_background_bitmap.clone
-    @background_sprite.bitmap = @m5_20141125_background
-  end
-  def m5_20141125_check_scene
     M5MCS20141125::SCENE.each do |scene|
-      return true if SceneManager.scene_is?(scene)
+      next unless SceneManager.scene_is?(scene)
+      @background_sprite.bitmap = M5MCS20141125.background
+      break
     end
-    false
   end
-  alias m5_20141125_terminate terminate
-  def terminate
-    SceneManager.m5_snapshot_for_background
-    m5_20141125_terminate
-    @m5_20141125_background.dispose if @m5_20141125_background
+end
+class Scene_Menu
+  alias m5_20141125_pre_terminate pre_terminate
+  def pre_terminate
+    M5MCS20141125.snapshot
+    m5_20141125_pre_terminate
   end
 end
