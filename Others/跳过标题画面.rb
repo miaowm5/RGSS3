@@ -18,7 +18,7 @@
   如果有使用我的全局变量脚本的话，还可以随着游戏的进度修改不同的标题画面地图
 
 =end
-$m5script ||= {}; $m5script[:M5ST20151228] = 20151228
+$m5script ||= {}; $m5script[:M5ST20151228] = 20151230
 module M5ST20151228; DATA = {
 #==============================================================================
 #  设定部分
@@ -68,7 +68,27 @@ module M5ST20151228; DATA = {
 #  设定结束
 #==============================================================================
 }
+end # module M5ST20151228
+class Scene_Title
+  alias m5_20151230_start start
+  def start
+    setting = m5_20151230_title_setting
+    $data_system.start_map_id = setting[:map]
+    $data_system.start_x = setting[:x]
+    $data_system.start_y = setting[:y]
+    $data_system.opt_transparent = setting[:opt]
+    m5_20151230_start
+  end
+  def m5_20151230_title_setting
+    temp_data = load_data("Data/System.rvdata2")
+    { map: temp_data.start_map_id, x: temp_data.start_x,
+      y: temp_data.start_y, opt: temp_data.opt_transparent }
+  end
+end
+module M5ST20151228
+
 Origin_Scene = Scene_Title
+
 class << self
   def title
     SceneManager.scene.fadeout_all
@@ -82,28 +102,23 @@ class << self
   end
   alias reset set
 end
+
 class Scene < Origin_Scene
   def transition_speed; return 0; end
   def perform_transition; end
-  def post_start
-    super
-    temp_data = load_data("Data/System.rvdata2")
-    setting = { map: temp_data.start_map_id, x: temp_data.start_x,
-                y: temp_data.start_y, opt: temp_data.opt_transparent }
+  def play_title_music; end
+  def fadeout_all(time = 1000); super(0); end
+  def post_start; command_new_game; end
+  def m5_20151230_title_setting
+    setting = super
     set = DATA["DEFAULT"]
     setting.merge!(set) if set
     if M5ST20151228.check_base
       data_name = M5GV20140811.get_ext[:m5st20151228]
       setting.merge!(set) if data_name && (set = DATA[data_name])
     end
-    $data_system.start_map_id = setting[:map]
-    $data_system.start_x = setting[:x]
-    $data_system.start_y = setting[:y]
-    $data_system.opt_transparent = setting[:opt]
-    command_new_game
+    setting
   end
-  def play_title_music; end
-  def fadeout_all(time = 1000); super(0); end
 end
 end # module M5ST20151228
 Scene_Title = M5ST20151228::Scene
