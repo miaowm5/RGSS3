@@ -14,7 +14,7 @@
 
   2.随机等待时间
     在移动路线中输入脚本：
-      @m5_20160114_control.wait(等待的最长时间,等待的最短时间)
+      m5_route.wait(等待的最长时间,等待的最短时间)
     可以让事件移动过程中随机等待指定的帧数
 
   ※ 以下功能请通过事件指令的设置移动路径指令设置，
@@ -22,18 +22,18 @@
 
   3.滚个球
     在移动路线中输入脚本：
-      @m5_20160114_control.rolling_up
-      @m5_20160114_control.rolling_left
-      @m5_20160114_control.rolling_right
-      @m5_20160114_control.rolling_down
+      m5_route.rolling_up
+      m5_route.rolling_left
+      m5_route.rolling_right
+      m5_route.rolling_down
     事件将会分别向对应的方向（上、左、右、下）移动999步，
     移动过程中碰到障碍物会停止移动
     用这个功能可以实现类似踢足球的效果
 
   4.淡入淡出
     在移动路线中输入脚本：
-      @m5_20160114_control.fade_out(淡出时间)
-      @m5_20160114_control.fade_in(淡入时间)
+      m5_route.fade_out(淡出时间)
+      m5_route.fade_in(淡入时间)
     角色将会依照指定的时间执行淡入、淡出的效果
 
 =end
@@ -70,20 +70,22 @@ module M5MC20160114; class Control
     opacity = @character.opacity
     code = Game_Character::ROUTE_CHANGE_OPACITY
     amount = (255.0 - opacity) / time
-    list = Array.new(time) do |i|
+    list = Array.new(time - 1) do |i|
       value = opacity + amount * (i + 1)
       RPG::MoveCommand.new(code, [value.to_i])
     end
+    list.push RPG::MoveCommand.new(code, 255)
     set_move_command(:fade_in, list)
   end
   def fade_out(time)
     opacity = @character.opacity
     code = Game_Character::ROUTE_CHANGE_OPACITY
     amount = (opacity) / time
-    list = Array.new(time) do |i|
+    list = Array.new(time - 1) do |i|
       value = opacity - amount * (i + 1)
       RPG::MoveCommand.new(code, [value.to_i])
     end
+    list.push RPG::MoveCommand.new(code, 0)
     set_move_command(:fade_out, list)
   end
 
@@ -153,5 +155,7 @@ class Game_Character
     when 2 then @m5_20160114_control.wait(120,30)
     end
   end
+
+  def m5_route; @m5_20160114_control; end
 
 end
