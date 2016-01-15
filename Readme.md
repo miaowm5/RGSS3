@@ -18,6 +18,6 @@ Github并不是更新的主力，目前的重心还是放在我在6R的 [博客]
 
 ***
 
-Created By Mwm5(2014) All Rights Reserved
+Created By Mwm5 All Rights Reserved
 
 [image1]: http://ww3.sinaimg.cn/large/c5e47d21gw1eh6kvhzoy2j20b402sdg5.jpg
