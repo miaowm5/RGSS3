@@ -28,7 +28,8 @@
   来打开分解界面
 
 =end
-$m5script ||= {}; $m5script[:M5DI20160122] = 20160122
+$m5script ||= {}; raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
+$m5script[:M5DI20160122] = 20160122; M5script.version(20151221)
 module M5DI20160122
 #==============================================================================
 # 设定部分
@@ -41,10 +42,6 @@ module M5DI20160122
   RATE = 0.1
 
   # 分解获得更多数量道具的几率 + 10%
-
-  NOTE = "分解所得"
-
-  # 数据库中备注的形式：<分解所得 [1,3]>
 
   SE = 'Bell2'
 
@@ -74,16 +71,6 @@ module M5DI20160122
 #==============================================================================
 
 class << self
-  # 读取备注的方法（喵呜喵5基础脚本的简化版）
-  def match_text(text, &block)
-    return nil if text.empty?
-    text.each_line do |line|
-      line.chomp!
-      result = /^\s*<\s*#{NOTE}\s+(\S+)\s*>\s*$/ =~ line ? $1 : nil
-      next unless result
-      yield(eval(result.gsub(/，/){',' }))
-    end
-  end
   def enough_money?; $game_party.gold >= GOLD; end
   def call; SceneManager.call(Scene); end
 end
@@ -258,7 +245,9 @@ end # module M5DI20160122
 class RPG::BaseItem
   def m5_20160122_decompose_result
     value = []
-    M5DI20160122.match_text(@note) {|r| value << r}
+    m5note("分解所得",nil,true,true) do |result|
+      value << eval(result.gsub(/，/){','})
+    end
     value.empty? ? nil : value
   end
 end
