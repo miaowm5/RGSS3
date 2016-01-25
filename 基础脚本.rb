@@ -14,7 +14,7 @@
 #==============================================================================
 
 $m5script ||= {}; $m5script[:ScriptData] ||= {}
-$m5script[:M5Base] = 20151221
+$m5script[:M5Base] = 20160125
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -27,19 +27,33 @@ module M5script
   end
 end
 #--------------------------------------------------------------------------
-# ● 匹配文本内容
+# ● 读取备注、匹配文本
 #
-#     M5script.match_text(text, note, default, value, list)
+#     M5script::M5note.match_text(text, note[, option, &block])
+#     匹配文本的基本指令
 #
-#     text     : 文本内容(string)
-#     note     : 需要匹配的文字(string)
-#     default  : 缺省值(nil)
-#     value    : 匹配文字是否需要包含结果(true/false)
-#     list     : 是否返回全部匹配结果的数组(false/true)
+#     text   : 文本内容(String)
+#     note   : 需要匹配的文字(String)
+#     option : 匹配文本的设置的哈希表
+#       :default 缺省值(nil)
+#       :value   待匹配文字是否包含内容(true)
+#       :list    是否返回全部匹配结果的数组(nil)
+#     &block : 成功匹配时执行的回调
+#
+#     M5script::M5note.map_note(map, note[, option, &block])
+#     读取地图备注
+#
+#     M5script::M5note.event_note(map, id, note[, option, &block])
+#     读取活动事件页的第一条指令，如果为注释则进行匹配
+#
 #--------------------------------------------------------------------------
-module M5script
-  def self.match_text(text, note, default, value, list, &block)
-    return list ? [default] : default if text.empty?
+module M5script; module M5note; class << self
+  def match_text(text, note, *option, &block)
+    config = option[0].is_a?(Hash) ?
+      [option[0][:default], option[0][:value], option[0][:list]] : option
+    default, value, list =  *config
+    value = true if value.nil?
+    return list ? [] : default if text.empty?
     all_result = []
     text.each_line do |line|
       line.chomp!
@@ -48,64 +62,49 @@ module M5script
         next unless result
         yield(result) if block_given?
         return result unless list
-        all_result.push result
+        all_result << result
       else
         return true if /^\s*<\s*#{note}\s*>\s*$/ =~ line
       end
     end
-    all_result.push default if all_result.empty?
-    return list ? ( value ? all_result : false ) : default
+    return false unless value
+    list ? all_result : default
   end
-end
-#--------------------------------------------------------------------------
-# ● 读取备注
-#
-#     m5note(note, default, value, list)
-#--------------------------------------------------------------------------
-class RPG::BaseItem
-  def m5note(note, default = nil, value = true, list = false, &block)
-    M5script.match_text(@note, note, default, value, list, &block)
+  def map_note(map, *args)
+    text = load_data(sprintf("Data/Map%03d.rvdata2", map)).note
+    match_text(text, *args)
   end
-end
-#--------------------------------------------------------------------------
-# ● 读取活动事件页的第一条指令，如果为注释则进行匹配
-#
-#     M5script.read_event_note(map, id, note, default, value, list)
-#--------------------------------------------------------------------------
-module M5script
-  def self.read_event_note(map, id, note, default = nil, value = true,
-      list = false, &block)
+  def event_note(map, id, *args)
     begin
       if map == $game_map.map_id then page = $game_map.events[id]
       else
         ev = load_data(sprintf("Data/Map%03d.rvdata2", map)).events[id]
-        page = Game_Event.new(map,ev)
-        page.refresh
+        (page = Game_Event.new(map,ev)).refresh
       end
-      return list ? [default] : default if page.empty?
-      ev_list = page.list
-    rescue
-      return list ? [default] : default
+      page.empty? ? raise : ev_list = page.list
+    rescue then return match_text('', *args)
     end
-    text = ""
-    ev_list.each do |command|
-      break if command.code != 108 && command.code != 408
-      text += command.parameters[0] + "\n"
+    text = ''
+    ev_list.each do |c|
+      c.code == 108 || c.code == 408 || break
+      text += c.parameters[0] + "\n"
     end
-    M5script.match_text(text, note, default, value, list, &block)
+    match_text(text, *args)
   end
+end; end; end
+#--------------------------------------------------------------------------
+# ● 读取物品备注
+#--------------------------------------------------------------------------
+class RPG::BaseItem
+  def m5note *args; M5script::M5note.match_text(@note,*args); end
 end
 #--------------------------------------------------------------------------
-# ● 读取地图备注
-#
-#     M5script.read_map_note(map, note, default, value, list)
+# ● 与旧版基础脚本的兼容
 #--------------------------------------------------------------------------
-module M5script
-  def self.read_map_note(map, note, default = nil, value = true,
-      list = false, &block)
-    text = load_data(sprintf("Data/Map%03d.rvdata2", map)).note
-    M5script.match_text(text, note, default, value, list, &block)
-  end
+class << M5script
+  def match_text *args;      M5script::M5note.match_text *args; end
+  def read_map_note *args;   M5script::M5note.map_note *args;   end
+  def read_event_note *args; M5script::M5note.event_note *args; end
 end
 #--------------------------------------------------------------------------
 # ● 精灵 Sprite_M5_Base / Sprite_M5
@@ -115,21 +114,19 @@ class Sprite_M5_Base < Sprite
     dispose_bitmap
     super
   end
-  def dispose_bitmap
-  end
+  def dispose_bitmap; end
 end
-class Sprite_M5 < Sprite_M5_Base
-end
+class Sprite_M5 < Sprite_M5_Base; end
 #--------------------------------------------------------------------------
 # ● 显示端口 Viewport_M5
 #--------------------------------------------------------------------------
-class Viewport_M5 < Viewport
-end
+class Viewport_M5 < Viewport; end
 #--------------------------------------------------------------------------
 # ● 精灵组 Spriteset_M5
 #--------------------------------------------------------------------------
 class Spriteset_M5
-  def update;end;def dispose;end
+  def update; end
+  def dispose; end
 end
 #--------------------------------------------------------------------------
 # ● 自动更新释放精灵以及显示端口
