@@ -71,6 +71,13 @@
       m5_cs(1,2,3)
     可以将除了1、2、3号开关以外的其他开关重置为游戏最开始时的状态
 
+  9.执行代码
+    在事件页的脚本中输入：
+      m5_eval
+    若下一个指令是显示滚动文字指令，则会跳过该指令并执行写在滚动文字指令中的代码
+    相比于直接用事件脚本执行代码，
+    滚动文字指令不会对代码进行强制换行，允许输入的行数也是无限的
+
 =end
 #==============================================================================
 #  脚本部分
@@ -128,5 +135,12 @@ class Game_Interpreter
     $game_switches.instance_variable_set("@data", [])
     list.each_with_index { |id,i| $game_switches[id] = value[i] }
     $game_switches.on_change
+  end
+  def m5_eval
+    code, @index = '', @index + 1
+    while next_event_code == 405
+      code += @list[(@index += 1)].parameters[0] + "\n"
+    end
+    eval(code)
   end
 end
