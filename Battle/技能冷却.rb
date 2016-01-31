@@ -112,6 +112,10 @@ class Game_Battler
   alias m5_20160127_on_battle_end on_battle_end
   def on_battle_end
     m5_20160127_on_battle_end
+    @m5_20160127_skill.keys.each do |s|
+      time = (@m5_20160127_skill[s] -= 1)
+      @m5_20160127_skill.delete(s) if time < 0
+    end
     return unless M5ST20160127::RECOVER
     m5_20160127_reset_time
   end
