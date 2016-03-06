@@ -16,7 +16,7 @@
 =end
 $m5script ||= {}
 raise("需要喵呜喵5地图显示变量脚本的支持") unless $m5script[:M5Var20140815]
-$m5script[:M5EC20150129] = 20150519
+$m5script[:M5EC20150129] = 20160306
 M5script.version(20150519,"喵呜喵5地图显示变量脚本版本过低",:M5Var20140815)
 module M5EC20150129
 #==============================================================================
@@ -71,11 +71,16 @@ module M5EC20150129
 #  脚本部分
 #==============================================================================
   def self.text
-    x = $game_map.round_x_with_direction($game_player.x, $game_player.direction)
-    y = $game_map.round_y_with_direction($game_player.y, $game_player.direction)
-    event = $game_map.events[$game_map.event_id_xy(x, y)]
-    return "" unless event && event.list
-    return M5script.read_event_note($game_map.map_id, event.id, "提示","")
+    begin
+      p, m = $game_player, $game_map
+      x = $game_map.round_x_with_direction(p.x, p.direction)
+      y = $game_map.round_y_with_direction(p.y, p.direction)
+      event = m.events[m.event_id_xy(x, y)]
+      return "" unless event && event.list
+      return M5script.read_event_note(m.map_id, event.id, "提示","")
+    rescue
+      return ""
+    end
   end
 end
 class Scene_Map; m5_20150517_window(M5EC20150129); end
