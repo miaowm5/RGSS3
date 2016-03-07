@@ -9,7 +9,7 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5Var20140815] = 20150803;M5script.version(20150706)
+$m5script[:M5Var20140815] = 20160307;M5script.version(20150706)
 module M5Var20140815;VAR_CONFIG =[
 =begin
 #==============================================================================
@@ -118,6 +118,8 @@ class Window_Var < M5script::Window_Var
     @config[:HINT2] ||= ""
     @config[:POSX] ||= 0
     @config[:POSY] ||= 0
+    return if @config[:EVAL]
+    @config[:EVAL] = "$game_variables[#{@config[:VAR]}]"
   end
   #--------------------------------------------------------------------------
   # ● 更新
@@ -156,17 +158,20 @@ class Window_Var < M5script::Window_Var
   # ● 更新窗口内容
   #--------------------------------------------------------------------------
   def update_content
-    if @config[:EVAL] then refresh if eval(@config[:EVAL]) != @cont
-    else refresh if $game_variables[@config[:VAR]] != @cont
+    cont = @cont
+    begin
+      @cont = eval(@config[:EVAL]).to_s
+    rescue
+      p "窗口：#{@config}","错误：#{$!.to_s}","追踪：#{$!.backtrace}"
+      msgbox('地图显示变量脚本的某个窗口发生错误，错误信息已输出到控制台')
+      exit
     end
+    refresh unless cont == @cont
   end
   #--------------------------------------------------------------------------
   # ● 描绘文字
   #--------------------------------------------------------------------------
   def refresh
-    if @config[:EVAL] then @cont = eval(@config[:EVAL])
-    else @cont = $game_variables[@config[:VAR]] rescue 0
-    end
     if @config[:ONLY] then @word = "#{@config[:HINT1]}#{@config[:HINT2]}"
     else @word = "#{@config[:HINT1]}#{@cont}#{@config[:HINT2]}"
     end
