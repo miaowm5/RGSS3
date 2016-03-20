@@ -14,7 +14,7 @@
 #==============================================================================
 
 $m5script ||= {}; $m5script[:ScriptData] ||= {}
-$m5script[:M5Base] = 20160125
+$m5script[:M5Base] = 20160320
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
@@ -96,15 +96,15 @@ end; end; end
 # ● 读取物品备注
 #--------------------------------------------------------------------------
 class RPG::BaseItem
-  def m5note *args; M5script::M5note.match_text(@note,*args); end
+  def m5note *a,&b; M5script::M5note.match_text(@note,*a,&b); end
 end
 #--------------------------------------------------------------------------
 # ● 与旧版基础脚本的兼容
 #--------------------------------------------------------------------------
 class << M5script
-  def match_text *args;      M5script::M5note.match_text *args; end
-  def read_map_note *args;   M5script::M5note.map_note *args;   end
-  def read_event_note *args; M5script::M5note.event_note *args; end
+  def match_text *a,&b;      M5script::M5note.match_text *a,&b; end
+  def read_map_note *a,&b;   M5script::M5note.map_note *a,&b;   end
+  def read_event_note *a,&b; M5script::M5note.event_note *a,&b; end
 end
 #--------------------------------------------------------------------------
 # ● 精灵 Sprite_M5_Base / Sprite_M5
