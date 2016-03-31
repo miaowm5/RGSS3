@@ -20,7 +20,7 @@
   使用转义字符\nw[x]对话将停顿x帧，无法跳过停顿
 
 =end
-$m5script ||= {};$m5script[:M5MT20131130] = 20141218
+$m5script ||= {};$m5script[:M5MT20131130] = 20160331
 raise '请将逆转裁判式证言脚本放在文字显示速度控制脚本之下' if
   $m5script[:M5SB20141206]
 module M5MT20131130
@@ -77,14 +77,14 @@ class Window_Message
   alias m5_20131130_update_show_fast update_show_fast
   def update_show_fast
     m5_20131130_update_show_fast
-    return if M5MT20131130.button_off
-    @show_fast = @show_fast || Input.press?(M5MT20131130::BUT)
+    return if M5MT20131130.button_off || @show_fast
+    @show_fast = Input.press?(M5MT20131130::BUT)
   end
   alias m5_20141218_wait wait
-  def m5_20141218_wait(duration)
-    return m5_20141218_wait if M5MT20131130.button_off
-    [duration,0].max.times do |i|
-      Fiber.yield unless Input.press?(M5MT20131130::BUT)
+  def wait(duration)
+    return m5_20141218_wait(duration) if M5MT20131130.button_off
+    duration.times do
+      Input.press?(M5MT20131130::BUT) ? break : Fiber.yield
     end
   end
   alias m5_20141218_input_pause input_pause
