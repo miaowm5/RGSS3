@@ -214,6 +214,7 @@ class Scene < Scene_MenuBase
   def on_item_ok
     @result_window.refresh(@item_window.item_decompose_data)
     @result_window.open
+    @confirm_window.refresh
     @confirm_window.open.activate.select(0)
   end
   def on_item_cancel
