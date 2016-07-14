@@ -15,7 +15,7 @@
   这个菜单主要用于解谜游戏，所以我不负责调整针对装备、技能功能的兼容。
 
 =end
-$m5script ||= {}; $m5script[:M5Menu20150325] = 20150325
+$m5script ||= {}; $m5script[:M5Menu20150325] = 20160714
 module M5Menu20150325
 #==============================================================================
 #  设定部分
@@ -61,6 +61,10 @@ module M5Menu20150325
 
   # 这里设置一个开关的ID，当这个开关打开的时候显示正常的菜单
 
+  OVER = true
+
+  # 设置为 false 时，选项框显示在立绘的上方
+
 #==============================================================================
 #  设定结束
 #==============================================================================
@@ -97,6 +101,7 @@ class Scene_M5Menu < Scene_MenuBase
     @lihui_sprite = Sprite.new
     @lihui_sprite.bitmap = Bitmap.new(
       "Graphics/m5lihui/#{$game_party.members[0].nickname}") rescue nil
+    @lihui_sprite.z = 500 if OVER
   end
   def create_command_windows
     @command_windows = Array.new(item_max) do |i|
