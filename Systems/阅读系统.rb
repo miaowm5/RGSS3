@@ -13,7 +13,7 @@
   描绘文字需要耗费一定的时间，请尽量避免显示太多的文字
 
 =end
-$m5script ||= {};$m5script[:M5Read20140811] = 20151113
+$m5script ||= {};$m5script[:M5Read20140811] = 20160809
 module M5Read20140811
 #==============================================================================
 #  设定部分
@@ -246,7 +246,8 @@ class M5Read20140811::Window
     @mouse = Mouse.z
     m5_20151113_open
   end
-  alias m5_20151113_update_input
+  alias m5_20151113_update_input update_input
+  def update_input
     if @mouse != Mouse.z
       set_scroll(-SPEED1 * SPEED2) if @mouse < Mouse.z
       set_scroll(SPEED1 * SPEED2) if @mouse > Mouse.z
