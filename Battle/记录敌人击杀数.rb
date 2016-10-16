@@ -27,14 +27,14 @@
 #==============================================================================
 #  脚本部分
 #==============================================================================
-$m5script ||= {}; $m5script[:M5EC20151114] = 20151114
+$m5script ||= {}; $m5script[:M5EC20151114] = 20161016
 module M5EC20151114; class << self
   def data; $game_system.m5_20151114_enemy_count; end
-  def [](id);         data[id] || 0;    end
-  def []=(id, value); data[id] = value; end
+  def [](id);     data[id] || 0;    end
+  def []=(id, v); data[id] = value; end
   def clear(id = nil)
     if id then data[id] = 0
-    else       data = []
+    else $game_system.m5_20151114_enemy_count = []
     end
   end
 end; end
