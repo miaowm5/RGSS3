@@ -58,6 +58,7 @@ module M5DI20160122
     HINT_ERROR: "金钱不足",
     HINT_SEP:   "-",
     HINT_UNIT:  "个",
+    HINT_SUCCESS: "分解成功，获得了以下道具：",
 
     OK:     "分解",
     CNACEL: "放弃"
@@ -108,10 +109,13 @@ end
 
 class Result < Window_Base
   def initialize(height)
-    super(0, 0, Graphics.width, height)
+    super *position(height)
     self.openness = 0
     self.z = 300
     self.back_opacity = 230
+  end
+  def position(height)
+    return [0, 0, Graphics.width, height]
   end
   def line_height; super; end
   def draw_line(line, type, data)
@@ -119,13 +123,19 @@ class Result < Window_Base
     case type
     when 0 then draw_text_ex(0, y, data)
     when 1
-      padding = 15
+      padding = draw_item_padding
       width = contents.width - padding * 2
       draw_item_name(data[0], padding, y, true, width)
-      num = (data[1] == 1 ? "1 " : "1 #{VOCAB[:HINT_SEP]} #{data[1]} ")
+      num = draw_item_number(data[1])
       draw_text(padding, y, width, line_height, num + VOCAB[:HINT_UNIT], 2)
     end
     line += 1
+  end
+  def draw_item_padding
+    15
+  end
+  def draw_item_number(value)
+    value == 1 ? "1 " : "1 #{VOCAB[:HINT_SEP]} #{value} "
   end
   def refresh(data)
     contents.clear
@@ -136,6 +146,32 @@ class Result < Window_Base
     line = draw_line(line, 0, "")
     line = draw_line(line, 0,
       M5DI20160122.enough_money? ? VOCAB[:HINT_FOOT] : VOCAB[:HINT_ERROR])
+  end
+end
+
+class Success < Result
+  def position(height)
+    w, h = Graphics.width / 2, Graphics.height / 2
+    return [(Graphics.width - w) / 2, (Graphics.height - h) * 2 / 3, w, h]
+  end
+  def draw_item_padding
+    5
+  end
+  def draw_item_number(value)
+    return "#{value} "
+  end
+  def refresh(data)
+    contents.clear
+    line = 0
+    line = draw_line(line, 0, VOCAB[:HINT_SUCCESS])
+    line = draw_line(line, 0, "")
+    data.each {|item| line = draw_line(line, 1, item) }
+  end
+end
+class SuccessCommand < Window_Command
+  def window_width; 0; end
+  def make_command_list
+    add_command('close success window', :ok)
   end
 end
 
@@ -177,6 +213,7 @@ class Scene < Scene_MenuBase
     create_list_window
     create_confirm_window
     create_result_window
+    create_success_window
   end
   def create_category_window
     @category_window = Category.new(@gold_window.width)
@@ -208,6 +245,12 @@ class Scene < Scene_MenuBase
   def create_result_window
     @result_window = Result.new(Graphics.height - @confirm_window.height)
   end
+  def create_success_window
+    @success_window = Success.new(0)
+    @success_window_command = SuccessCommand.new(0,0)
+    @success_window_command.set_handler(:ok, method(:on_confirm_cancel))
+    @success_window_command.set_handler(:cancel, method(:on_confirm_cancel))
+  end
   def on_category_ok
     @item_window.activate.select(0)
   end
@@ -222,21 +265,26 @@ class Scene < Scene_MenuBase
     @category_window.activate
   end
   def on_confirm_ok
+    result = []
     $game_party.lose_item(@item_window.item, 1)
     @item_window.item_decompose_data.each do |i, n|
       num = n * (rand + RATE)
       num = [[num.round, 1].max, n].min
       $game_party.gain_item(i, num)
+      result << [i, num]
     end
     $game_party.lose_gold(GOLD)
     Audio.se_play("Audio/SE/#{SE}") if SE
     @gold_window.refresh
     @item_window.refresh
-    on_confirm_cancel
+    @success_window.refresh(result)
+    @success_window.open
+    @success_window_command.activate.select(0)
   end
   def on_confirm_cancel
     @result_window.close
     @confirm_window.close
+    @success_window.close
     @item_window.activate
   end
 end
