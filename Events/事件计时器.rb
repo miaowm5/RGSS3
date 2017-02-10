@@ -109,7 +109,7 @@
     若之后修改了 1 号变量的值，执行结束计时器指令时将会发生错误，其他值亦同
 
 =end
-$m5script ||= {};$m5script[:M5Timer20150824] = 20151116
+$m5script ||= {};$m5script[:M5Timer20150824] = 20170210
 module M5Timer20150824
 #==============================================================================
 #  设定部分
@@ -134,6 +134,7 @@ class << self
   def start *args; $game_timer.m5timer20150824.start *args; end
   def clear *args; $game_timer.m5timer20150824.clear *args; end
   def add *args; $game_timer.m5timer20150824.add *args; end
+  def refresh_scene; $game_timer.m5timer20150824.refresh_scene; end
 end
 class Timer
   def collect_event_id(id)
@@ -151,7 +152,7 @@ class Timer
     operate_event(collect_event_id(id), false, true)
   end
   def initialize
-    @scene = [NilClass, false]
+    @scene = false
     clear_all
   end
   def clear_all
@@ -201,14 +202,13 @@ class Timer
   def clear_event(index)
     @event_list[index] = nil
   end
-  def check_scene
-    return @scene[1] if SceneManager.scene_is?(@scene[0])
+  def refresh_scene
     scene = SceneManager.scene.class
-    SCENE_LIST.each {|s| return (@scene = [s,true])[1] if s == scene }
-    (@scene = [scene,false])[1]
+    SCENE_LIST.each {|s| return (@scene = true) if s == scene }
+    @scene = false
   end
   def update
-    return unless check_scene
+    return unless @scene
     return if $game_switches[SWI]
     update_list @map_timeline[$game_map.map_id]
     update_list @global_timeline
@@ -289,5 +289,12 @@ class Game_Interpreter
       :时间 => args[4]
     }
     m5_20151117_set_time(event)
+  end
+end
+class Scene_Base
+  alias m5_20170210_start start
+  def start
+    M5Timer20150824.refresh_scene
+    m5_20170210_start
   end
 end
