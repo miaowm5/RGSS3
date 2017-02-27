@@ -8,7 +8,7 @@
   对于继承自父类且在当前类未定义的方法，先显式定义，再 alias
 
   instance_methods(false).include?(:method_name) ||
-    (def method_name; super; end)
+    (def method_name *args; super; end)
 
   （细节：http://rm.66rpg.com/thread-383400-1-1.html）
 
@@ -28,9 +28,9 @@ end
 
 class C
   instance_methods(false).include?(:method2) ||
-    (def method2; super; end)
+    (def method2 *args; super; end)
   instance_methods(false).include?(:method3) ||
-    (def method3; super; end)
+    (def method3 *args; super; end)
 
   alias c_method1 method1
   alias c_method2 method2
