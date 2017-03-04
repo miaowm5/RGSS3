@@ -14,16 +14,17 @@
 #==============================================================================
 
 $m5script ||= {}; $m5script[:ScriptData] ||= {}
-$m5script[:M5Base] = 20160320
+$m5script[:M5Base] = 20170304
 #--------------------------------------------------------------------------
 # ● 版本检查
 #
 #     M5script.version(ver) 检查脚本版本是否高于指定版本
 #--------------------------------------------------------------------------
 module M5script
-  def self.version(ver,hint = "喵呜喵5基础脚本版本过低！",key = :M5Base, h2="")
-    version = $m5script[key.to_sym] || $m5script[key.to_s] || raise(h2)
-    raise(hint) if (ver > version)
+  def self.version(ver,name="基础",key=:M5Base)
+    version = $m5script[key.to_sym] || $m5script[key.to_s] ||
+      fail("需要喵呜喵5#{name}脚本的支持")
+    fail("喵呜喵5#{name}脚本版本过低") if (ver > version)
   end
 end
 #--------------------------------------------------------------------------
