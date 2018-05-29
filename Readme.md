@@ -1,8 +1,8 @@
-##欢迎
+## 欢迎
 
 放在这里的是由我（喵呜喵5）自己写的RGSS3脚本。
 
-Github并不是更新的主力，目前的重心还是放在我在6R的 [博客](http://rm.66rpg.com/?291206) 。
+Github并不是更新的主力，目前的重心还是放在我在P1的 [博客](http://miaowm5.coding.me/script-blog/list.html) 。
 
 这些脚本全部免费使用，但是使用脚本前请先阅读 [使用规约](https://github.com/miaowm5/rgss3/blob/master/Licence.md) 。
 
