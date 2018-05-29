@@ -42,6 +42,8 @@ module M5IM20150215; LIST = [
       @viewport = Viewport.new
       @item_window = scene.instance_variable_get(:@command_window)
       @status_window = scene.instance_variable_get(:@status_window)
+      start
+      post_start
     end
     def item; $data_items[@item_id]; end
     def cursor_left?; true; end
@@ -61,6 +63,14 @@ module M5IM20150215; LIST = [
       super
       on_actor_cancel
     end
+    def terminate
+      pre_terminate
+      @item_window = nil
+      @status_window = nil
+      super
+    end
+    def create_background; end
+    def dispose_background; end
   end
 end
 class Window_MenuCommand
@@ -69,9 +79,9 @@ class Window_MenuCommand
     m5_20150215_add_original_commands
     M5IM20150215::LIST.each do |item|
       name = "m520150215im#{item[1]}".to_sym
-      has = $game_party.has_item?($data_items[item[1]])
-      if item[2] then add_command(item[0], name, has)
-      else add_command(item[0], name) if has
+      if $game_party.has_item?($data_items[item[1]])
+        add_command(item[0], name)
+      elsif item[2] then add_command(item[0], name, false)
       end
     end
   end
@@ -99,8 +109,7 @@ class Scene_Menu
   end
   alias m5_20150215_terminate terminate
   def terminate
+    @m520150215SA.terminate
     m5_20150215_terminate
-    @m520150215SA.actor_window.dispose
-    @m520150215SA.dispose_main_viewport
   end
 end
