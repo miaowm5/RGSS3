@@ -160,7 +160,6 @@ class Main
     @anime_index = 0
     get_config(config)
     update
-    refresh if @config[:ONLY]
   end
   #--------------------------------------------------------------------------
   # ● 获取窗口的设置
