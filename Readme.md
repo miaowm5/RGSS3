@@ -2,7 +2,7 @@
 
 放在这里的是由我（喵呜喵5）自己写的RGSS3脚本。
 
-Github并不是更新的主力，目前的重心还是放在我在P1的 [博客](http://miaowm5.coding.me/script-blog/list.html) 。
+Github 并不是更新的主力，主要更新都在我的 [博客](https://script.miaowm5.com/) 。
 
 这些脚本全部免费使用，但是使用脚本前请先阅读 [使用规约](https://github.com/miaowm5/rgss3/blob/master/Licence.md) 。
 
@@ -13,8 +13,6 @@ Github并不是更新的主力，目前的重心还是放在我在P1的 [博客]
 ***
 
 [新浪微博](http://weibo.com/mwm5)
-
-[LOFTER](http://mw-m5.lofter.com/)
 
 ***
 
