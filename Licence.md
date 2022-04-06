@@ -1,4 +1,4 @@
-##【使用规约】
+## 【使用规约】
 
 [![rule1]](http://rmtemp.lofter.com/post/3e26fe_156e50a)
 [![rule2]](http://rmtemp.lofter.com/post/3e26fe_156f11b)
