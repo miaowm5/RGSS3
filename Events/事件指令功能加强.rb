@@ -9,7 +9,15 @@
     在事件页的脚本中输入：
       m5_command[:淡入, 35]
       m5_command[:淡出, 35]
-    可以以 35 帧的速度淡入、淡出，依次类推
+    可以以 35 帧的速度淡入、淡出画面
+
+    输入：
+      m5_command[:放大淡出]
+    可以使用放大特效淡出画面。原理是对游戏画面截图后放大，所以放大时会出现画面锯齿
+    此指令默认时间为 60 帧，每帧画面放大 0.1 倍
+    输入：
+      m5_command[:放大淡出, 30, 0.02]
+    可以将效果时间修改为 30 帧，每帧画面放大 0.02 倍
 
 
   【消除图片加强】可以批量消除图片
@@ -113,6 +121,24 @@ class Game_Interpreter
       screen.start_fadeout(time)
       wait(time)
     end
+    function[:放大淡出] = ->(time=60, power=0.01) do
+      sprite = Sprite.new
+      sprite.bitmap = Graphics.snap_to_bitmap
+      sprite.x = sprite.ox = sprite.bitmap.width  / 2
+      sprite.y = sprite.oy = sprite.bitmap.height / 2
+      sprite.z = 200
+      screen.start_fadeout(1)
+      time.times do
+        Fiber.yield
+        sprite.zoom_x += power
+        sprite.zoom_y += power
+        sprite.opacity -= 255.0 / time
+        Graphics.update
+      end
+      sprite.bitmap.dispose
+      sprite.dispose
+    end
+
     function[:消除图片] = ->(*list) do
       screen.pictures.each{ |pic| pic.erase unless list.include?(pic.number) }
     end
