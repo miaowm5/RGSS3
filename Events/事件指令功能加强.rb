@@ -150,11 +150,13 @@ class Game_Interpreter
       $game_self_switches.instance_variable_get("@data").delete_if do |key|
         map == key[0] && !ev.include?(key[1])
       end
+      $game_self_switches.on_change
     end
     function[:清空独立开关] = ->(map=[]) do
       $game_self_switches.instance_variable_get("@data").delete_if do |key|
         !map.include?(key[0])
       end
+      $game_self_switches.on_change
     end
     function[:等待] = ->(*time) do
       time0 = [time.sort![0],0].max
