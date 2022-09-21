@@ -28,7 +28,7 @@
   ※ RM 默认的名字输入窗口在名字长度的处理上存在BUG，因此请尽量不要设置太长的长度
 
 =end
-$m5script ||= {}; $m5script[:M5SN20160119] = 20160119
+$m5script ||= {}; $m5script[:M5SN20160119] = 20220921
 module M5SN20160119
 #==============================================================================
 # 设定部分
@@ -42,37 +42,37 @@ module M5SN20160119
 
   # 名称输入界面技能名的默认最大长度
 
-  FACE_NAME = 'Spiritual'
+  PROXY_ACTOR = 1
 
-  # 显示在名称输入界面的脸图的文件名，不需要的话，请填写 ''
-
-  FACE_INDEX = 4
-
-  # 显示在名称输入界面的脸图的位置编号
+  # 控制显示在技能名称输入界面的脸图角色，不需要时将此角色的脸图配置为空即可
 
 #==============================================================================
 # 脚本部分
 #==============================================================================
+  PROXY_ID = :M5SN20160119
   class Scene < Scene_Name
     def prepare(skill_id, max_char)
-      @skill_id = skill_id
-      (actor = RPG::Actor.new).name = $data_skills[@skill_id].name
-      actor.face_name, actor.face_index = FACE_NAME, FACE_INDEX
-      super($data_actors.size, max_char)
-      $data_actors << actor
+      M5SN20160119.proxy.m5_20220921_setup(skill_id)
+      super(PROXY_ID, max_char)
     end
     def start
       super
-      @edit_window.instance_variable_set(:@default_name,
-        $data_skills[@skill_id].m5_20160119_name)
-    end
-    def on_input_ok
-      M5SN20160119[@skill_id] = @edit_window.name
-      super
-      $data_actors.pop
+      @edit_window.instance_variable_set(
+        :@default_name, M5SN20160119.proxy.m5_20220921_name)
     end
   end
   class << self
+    def proxy
+      return @actor if @actor
+      @actor = Game_Actor.new(PROXY_ACTOR)
+      def @actor.m5_20220921_setup(id); @m5_20220921_id = id; end
+      def @actor.name; $data_skills[@m5_20220921_id].name; end
+      def @actor.name=(name); M5SN20160119[@m5_20220921_id] = name; end
+      def @actor.m5_20220921_name
+        $data_skills[@m5_20220921_id].m5_20160119_name
+      end
+      return @actor
+    end
     def []=(id,value); $game_system.m5_20160119_skill_name[id] = value; end
     def [](id);        $game_system.m5_20160119_skill_name[id]; end
     def set(id, max = CHAR)
@@ -80,6 +80,13 @@ module M5SN20160119
       SceneManager.scene.prepare(id, max)
       Fiber.yield
     end
+  end
+end
+class Game_Actors
+  alias m5_20220921_get []
+  def [](id)
+    return M5SN20160119.proxy if id == M5SN20160119::PROXY_ID
+    m5_20220921_get(id)
   end
 end
 class RPG::Skill
