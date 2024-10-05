@@ -29,11 +29,15 @@
 
 =end
 $m5script ||= {};raise("需要喵呜喵5基础脚本的支持") unless $m5script[:M5Base]
-$m5script[:M5ST20160127] = 20160127;M5script.version(20160125)
+$m5script[:M5ST20160127] = 20241005;M5script.version(20160125)
 module M5ST20160127
 #==============================================================================
 #  设定部分
 #==============================================================================
+
+  TIMING = 2
+
+  # 技能冷却回复的时机 1:行动结束 2:回合结束
 
   RECOVER = false
 
@@ -100,22 +104,23 @@ class Game_BattlerBase
   end
 end
 class Game_Battler
-  alias m5_20160127_on_turn_end on_turn_end
-  def on_turn_end
-    m5_20160127_on_turn_end
-    return unless $game_party.in_battle || M5ST20160127::MAP_COUNT
+  def m5_20241005_decrease_time
     @m5_20160127_skill.keys.each do |s|
       time = (@m5_20160127_skill[s] -= 1)
       @m5_20160127_skill.delete(s) if time < 0
     end
   end
+  alias m5_20240918_remove_states_auto remove_states_auto
+  def remove_states_auto(timing)
+    m5_20240918_remove_states_auto(timing)
+    return unless M5ST20160127::TIMING == timing
+    return unless $game_party.in_battle || M5ST20160127::MAP_COUNT
+    m5_20241005_decrease_time
+  end
   alias m5_20160127_on_battle_end on_battle_end
   def on_battle_end
     m5_20160127_on_battle_end
-    @m5_20160127_skill.keys.each do |s|
-      time = (@m5_20160127_skill[s] -= 1)
-      @m5_20160127_skill.delete(s) if time < 0
-    end
+    m5_20241005_decrease_time if M5ST20160127::TIMING == 2
     return unless M5ST20160127::RECOVER
     m5_20160127_reset_time
   end
