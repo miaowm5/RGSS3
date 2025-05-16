@@ -143,7 +143,7 @@ class << M5IT20250512::Loader
           list_content = load_event_list(event_page.list, [event_id, page_index])
           if list_content.size > 0
             event_content.push("<事件页#{page_index + 1}>")
-            event_content += [list_content]
+            event_content += list_content
           end
         end
         if event_content.size > 0
@@ -158,17 +158,18 @@ class << M5IT20250512::Loader
     end
   end
   def load_common_event
-    file_content = ["《公共事件》", ""]
     file = load_data("Data/CommonEvents.rvdata2")
     file.each do |event|
       next unless event
-      list_content = load_event_list(event.list, [event.id])
+      file_content = ["《#{event.name}(公共事件#{event.id})》", ""]
+      list_content = load_event_list(event.list, [])
       if list_content.size > 0
-        file_content.push("<#{event.name}(公共事件#{event.id})>")
-        file_content += [list_content] + [""]
+        file_content += list_content
+      end
+      if file_content.size > 2
+        save_text("公共事件#{event.id}",file_content.join("\n"))
       end
     end
-    save_text("公共事件", file_content.join("\n"))
   end
   def load_troop_event
     file = load_data("Data/Troops.rvdata2")
@@ -180,7 +181,7 @@ class << M5IT20250512::Loader
         list_content = load_event_list(event_page.list, [index])
         if list_content.size > 0
           file_content.push("<事件页#{index + 1}>")
-          file_content += [list_content]
+          file_content += list_content
         end
       end
       if file_content.size > 2
@@ -322,20 +323,17 @@ class << M5IT20250512::Saver
     end
   end
   def save_common_event
-    result = read_txt("公共事件")
-    return unless result
-    ev = {}
-    result.each do |event|
-      id = event[:info][0].to_i
-      index = event[:info][1].to_i
-      ev[id] = ev[id] || {}
-      ev[id][index] = event
-    end
     file = load_data("Data/CommonEvents.rvdata2")
     file.each do |event|
       next unless event
-      next unless ev[event.id]
-      event.list = save_event_list(event.list, ev[event.id])
+      result = read_txt("公共事件#{event.id}")
+      next unless result
+      ev = {}
+      result.each do |event|
+        index = event[:info][0].to_i
+        ev[index] = event
+      end
+      event.list = save_event_list(event.list, ev)
     end
     save_data(file,"Data/CommonEvents.rvdata2")
   end
